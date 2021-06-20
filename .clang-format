@@ -1,0 +1,13 @@
+Language: Cpp
+BasedOnStyle: WebKit
+
+BreakBeforeBraces: Attach
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: false
+
+BreakInheritanceList: BeforeComma
+ColumnLimit: 120
+NamespaceIndentation: All
+
+FixNamespaceComments: true
+PointerAlignment: Right
