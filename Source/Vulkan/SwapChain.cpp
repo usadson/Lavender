@@ -6,12 +6,14 @@
 
 #include "SwapChain.hpp"
 
+#include <limits>
+
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
 namespace vke {
 
-    SwapChain::~SwapChain() {
+    SwapChain::~SwapChain() noexcept {
         const auto device = m_core->logicalDevice();
         const auto &allocator = m_core->allocator();
 
@@ -19,8 +21,10 @@ namespace vke {
             return;
 
         for (const auto &element : m_swapChainElements) {
-            if (element.commandBuffer)
-                device.freeCommandBuffers(m_core->m_commandPool, 1, &element.commandBuffer, allocator);
+            if (element.commandBuffer) {
+                // TODO shouldn't this use the VulkanCore::m_allocatorCallbacks
+                device.freeCommandBuffers(m_core->m_commandPool, 1, &element.commandBuffer);
+            }
 
             if (element.frameBuffer)
                 device.destroyFramebuffer(element.frameBuffer, allocator);
@@ -125,7 +129,7 @@ namespace vke {
         m_swapChainElements.resize(std::size(swapChainImages.value));
         std::transform(std::cbegin(swapChainImages.value), std::cend(swapChainImages.value),
             std::begin(m_swapChainElements), [](vk::Image image) -> SwapChainElement {
-                return {image, {}, {}};
+                return {image, {}, {}, {}};
             }
         );
 
