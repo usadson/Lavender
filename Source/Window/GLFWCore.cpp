@@ -19,14 +19,25 @@
 
 namespace window {
 
+    [[nodiscard]] inline constexpr int
+    convertGraphicsAPINameToGLFWEnum(GraphicsAPI::Name name) noexcept {
+        switch (name) {
+            case GraphicsAPI::Name::OPENGL:
+                return GLFW_OPENGL_API;
+            case GraphicsAPI::Name::VULKAN:
+            default:
+                return GLFW_NO_API;
+        }
+    }
+
     bool
-    GLFWCore::initialize() {
+    GLFWCore::initialize(GraphicsAPI::Name graphicsAPI) {
         if (!glfwInit()) {
             std::printf("GLFW: failed to init: %s\n", getGLFWError().data());
             return false;
         }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_CLIENT_API, convertGraphicsAPINameToGLFWEnum(graphicsAPI));
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         m_window = glfwCreateWindow(1280, 720, "Lavender", nullptr, nullptr);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Source/Base/ArrayView.hpp"
+#include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Vector.hpp"
 
 #ifdef ENABLE_VULKAN
@@ -16,7 +17,7 @@
 class WindowAPI {
 public:
     [[nodiscard]] virtual bool
-    initialize() = 0;
+    initialize(GraphicsAPI::Name graphicsAPI) = 0;
 
     virtual
     ~WindowAPI() = default;

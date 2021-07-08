@@ -13,7 +13,7 @@
 base::ExitStatus
 Lavender::run() {
 	m_windowAPI = std::make_unique<window::GLFWCore>();
-	if (!m_windowAPI->initialize()) {
+	if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
 		return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
 	}
 

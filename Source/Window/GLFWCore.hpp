@@ -24,7 +24,7 @@ namespace window {
 
     public:
         [[nodiscard]] bool
-        initialize() override;
+        initialize(GraphicsAPI::Name graphicsAPI) override;
 
         ~GLFWCore() override;
 
