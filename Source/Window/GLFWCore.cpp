@@ -106,7 +106,7 @@ namespace window {
 
     void
     GLFWCore::postLoop() {
-        // Nothing yet.
+        glfwSwapBuffers(m_window);
     }
 
 } // namespace window
