@@ -6,8 +6,7 @@
 
 #include "Lavender.hpp"
 
-#include <cstdio>
-
+#include "Source/OpenGL/GLCore.hpp"
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
 
@@ -18,7 +17,8 @@ Lavender::run() {
 		return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
 	}
 
-	m_graphicsAPI = std::make_unique<vke::Core>();
+//	m_graphicsAPI = std::make_unique<vke::Core>();
+        m_graphicsAPI = std::make_unique<gle::Core>();
 	if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
 		return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
 	}

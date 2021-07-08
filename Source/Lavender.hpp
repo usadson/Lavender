@@ -13,10 +13,10 @@
 #include "Source/GraphicsAPI.hpp"
 
 class Lavender {
-	std::unique_ptr<GraphicsAPI> m_graphicsAPI{nullptr};
-	std::unique_ptr<WindowAPI> m_windowAPI{ nullptr };
+    std::unique_ptr<GraphicsAPI> m_graphicsAPI{nullptr};
+    std::unique_ptr<WindowAPI> m_windowAPI{ nullptr };
 
 public:
-	[[nodiscard]] base::ExitStatus
-	run();
+    [[nodiscard]] base::ExitStatus
+    run();
 };
