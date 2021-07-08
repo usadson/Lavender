@@ -8,6 +8,7 @@
 
 #ifdef IO_FILEINPUT_USE_POSIX
 #   include <sys/stat.h>
+#   include <fcntl.h>
 #   include <unistd.h>
 #endif
 
@@ -17,7 +18,7 @@
 namespace io {
 
     [[nodiscard]] inline constexpr Error
-    associateOpenErrnoWithIOError(errno_t error) noexcept {
+    associateOpenErrnoWithIOError(int error) noexcept {
         switch (error) {
             case ENOENT:
                 return Error::FILE_NOT_FOUND;
@@ -33,7 +34,7 @@ namespace io {
     }
 
     [[nodiscard]] inline constexpr Error
-    associateReadErrnoWithIOError(errno_t error) noexcept {
+    associateReadErrnoWithIOError(int error) noexcept {
         return Error::UNKNOWN_READ_ERROR;
     }
 
@@ -82,7 +83,7 @@ namespace io {
             return;
         }
 
-        m_size = static_cast<std::size_t>(sb.st_size);
+        m_size = static_cast<std::size_t>(status.st_size);
 #else
         const auto prevPos = ftell(m_file);
 
@@ -112,7 +113,7 @@ namespace io {
     FileInput::read(char *data, std::size_t size) noexcept {
         while (size != 0) {
 #ifdef IO_FILEINPUT_USE_POSIX
-            const auto ret = read(m_file, data, size);
+            const auto ret = ::read(m_file, data, size);
 
             if (ret == 0) {
                 m_error = Error::TRY_READ_PAST_EOF;
@@ -120,7 +121,7 @@ namespace io {
             }
 
             if (ret == -1) {
-                m_error = associateReadErrnoWithIOError();
+                m_error = associateReadErrnoWithIOError(errno);
                 return false;
             }
 #else
