@@ -38,8 +38,8 @@ namespace window {
         getRequiredVulkanInstanceExtensions() noexcept override;
 #endif
         
-	    [[nodiscard]] math::Vector2u
-	    queryFramebufferSize() const noexcept override;
+        [[nodiscard]] math::Vector2u
+        queryFramebufferSize() const noexcept override;
 
         [[nodiscard]] bool
         shouldClose() override;

@@ -3,9 +3,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 add_library(GLFWCore OBJECT
-  "GLFWCore.cpp"
-  "GLFWCore.hpp"
+            GLFWCore.cpp
+            GLFWCore.hpp
 )
 
 target_link_libraries(GLFWCore
-  PRIVATE project_diagnostics)
+    PRIVATE project_diagnostics)
