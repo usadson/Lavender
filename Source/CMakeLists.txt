@@ -10,6 +10,7 @@ add_library(LavenderCore OBJECT
 add_executable(Lavender main.cpp)
 
 add_subdirectory(IO)
+add_subdirectory(OpenGL)
 add_subdirectory(Vulkan)
 add_subdirectory(Window)
 
@@ -23,5 +24,6 @@ target_link_libraries(Lavender
           GLFWCore
           IOLibrary
           LavenderCore
+          OpenGLAPIEngine
           VulkanAPIEngine
 )
