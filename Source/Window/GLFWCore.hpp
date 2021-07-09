@@ -41,6 +41,9 @@ namespace window {
         [[nodiscard]] math::Vector2u
         queryFramebufferSize() const noexcept override;
 
+        [[nodiscard]] utils::Version<int>
+        queryGLContextVersion() const noexcept override;
+
         [[nodiscard]] bool
         shouldClose() override;
 

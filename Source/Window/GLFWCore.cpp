@@ -40,7 +40,20 @@ namespace window {
         glfwWindowHint(GLFW_CLIENT_API, convertGraphicsAPINameToGLFWEnum(graphicsAPI));
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+        if (graphicsAPI == GraphicsAPI::Name::OPENGL) {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        }
+
         m_window = glfwCreateWindow(1280, 720, "Lavender", nullptr, nullptr);
+
+        if (graphicsAPI == GraphicsAPI::Name::OPENGL) {
+            glfwMakeContextCurrent(m_window);
+#ifndef NDEBUG
+            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
+        }
 
         return true;
     }
@@ -92,6 +105,15 @@ namespace window {
         assert(height > 0);
 
         return {static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height)};
+    }
+
+    utils::Version<int>
+    GLFWCore::queryGLContextVersion() const noexcept {
+        return {
+            glfwGetWindowAttrib(m_window, GLFW_CONTEXT_VERSION_MAJOR),
+            glfwGetWindowAttrib(m_window, GLFW_CONTEXT_VERSION_MINOR),
+            glfwGetWindowAttrib(m_window, GLFW_CONTEXT_REVISION)
+        };
     }
 
     bool

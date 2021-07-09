@@ -9,6 +9,7 @@
 #include "Source/Base/ArrayView.hpp"
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Vector.hpp"
+#include "Source/Utils/Version.hpp"
 
 #ifdef ENABLE_VULKAN
 #include "Source/Vulkan/IncludeVulkan.hpp"
@@ -34,6 +35,9 @@ public:
 
     [[nodiscard]] virtual math::Vector2u
     queryFramebufferSize() const noexcept = 0;
+
+    [[nodiscard]] virtual utils::Version<int>
+    queryGLContextVersion() const noexcept = 0;
 
     [[nodiscard]] virtual bool
     shouldClose() = 0;
