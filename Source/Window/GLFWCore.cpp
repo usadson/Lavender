@@ -19,6 +19,16 @@
 
 namespace window {
 
+    static void
+    keyboardCallback(GLFWwindow *window, int key, int scanCode, int action, int mods) noexcept {
+        static_cast<void>(scanCode);
+        static_cast<void>(mods);
+
+        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+    }
+
     [[nodiscard]] inline constexpr int
     convertGraphicsAPINameToGLFWEnum(GraphicsAPI::Name name) noexcept {
         switch (name) {
@@ -54,6 +64,8 @@ namespace window {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
         }
+
+        glfwSetKeyCallback(m_window, reinterpret_cast<GLFWkeyfun>(&keyboardCallback));
 
         return true;
     }
