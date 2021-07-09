@@ -7,7 +7,11 @@
 # countries worldwide.
 
 add_library(OpenGLAPIEngine OBJECT
+        DebugMessenger.cpp
         GLCore.cpp
+        GraphicsHandle.hpp
+        Resources/Shader.cpp
+        Resources/ShaderProgram.cpp
 )
 
 target_link_libraries(OpenGLAPIEngine
