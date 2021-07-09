@@ -8,7 +8,7 @@
 
 namespace resources {
 
-    class GraphicsHandleBase {
+    class ModelGeometryDescriptor {
     };
 
 } // namespace resources

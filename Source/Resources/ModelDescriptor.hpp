@@ -6,27 +6,27 @@
 
 #pragma once
 
-#include "Source/Resources/GraphicsHandleBase.hpp"
+#include "Source/Resources/ModelGeometryDescriptor.hpp"
 
 namespace resources {
 
     class ModelDescriptor {
-        GraphicsHandleBase *m_graphicsHandle;
+        ModelGeometryDescriptor *m_geometryDescriptor;
 
     public:
         [[nodiscard]] inline constexpr explicit
-        ModelDescriptor(GraphicsHandleBase *graphicsHandle) noexcept
-                : m_graphicsHandle(graphicsHandle) {
+        ModelDescriptor(ModelGeometryDescriptor *geometryDescriptor) noexcept
+                : m_geometryDescriptor(geometryDescriptor) {
         }
 
-        [[nodiscard]] inline constexpr GraphicsHandleBase *
-        graphicsBase() noexcept {
-            return m_graphicsHandle;
+        [[nodiscard]] inline constexpr ModelGeometryDescriptor *
+        geometryDescriptor() noexcept {
+            return m_geometryDescriptor;
         }
 
-        [[nodiscard]] inline constexpr const GraphicsHandleBase *
-        graphicsBase() const noexcept {
-            return m_graphicsHandle;
+        [[nodiscard]] inline constexpr const ModelGeometryDescriptor *
+        geometryDescriptor() const noexcept {
+            return m_geometryDescriptor;
         }
     };
 

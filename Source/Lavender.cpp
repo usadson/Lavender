@@ -27,7 +27,7 @@ Lavender::run() {
     }
 
     static_cast<void>(
-        m_graphicsAPI->createModel(resources::ModelGeometry{
+        m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
             .vertices {
                 -0.5f,  0.5f, 0.0f, 0.0f,
                  0.5f,  0.5f, 1.0f, 0.0f,

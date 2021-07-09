@@ -153,8 +153,8 @@ namespace vke {
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
 
-        [[nodiscard]] inline resources::GraphicsHandleBase *
-        createModel(const resources::ModelGeometry &) noexcept override {
+        [[nodiscard]] inline resources::ModelGeometryDescriptor *
+        createModelGeometry(const resources::ModelGeometry &) noexcept override {
             return {};
         }
 

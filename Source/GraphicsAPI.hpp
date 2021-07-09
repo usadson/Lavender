@@ -26,8 +26,8 @@ public:
         VULKAN,
     };
 
-    [[nodiscard]] virtual resources::GraphicsHandleBase *
-    createModel(const resources::ModelGeometry &geometry) noexcept = 0;
+    [[nodiscard]] virtual resources::ModelGeometryDescriptor *
+    createModelGeometry(const resources::ModelGeometry &geometry) noexcept = 0;
 
     [[nodiscard]] virtual resources::TextureDescriptor *
     createTexture(const resources::TextureInput &textureInput) noexcept = 0;

@@ -25,7 +25,7 @@ namespace gle {
             : public GraphicsAPI {
         WindowAPI *m_windowAPI{nullptr};
 
-        std::vector<GraphicsHandle> m_graphicsHandles{};
+        std::vector<ModelGeometryDescriptor> m_geometryDescriptors{};
         std::vector<TextureDescriptor> m_textureDescriptors{};
 
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
@@ -39,8 +39,8 @@ namespace gle {
         translateTextureFormat(resources::TextureFormat) noexcept;
 
     public:
-        [[nodiscard]] resources::GraphicsHandleBase *
-        createModel(const resources::ModelGeometry &geometry) noexcept override;
+        [[nodiscard]] resources::ModelGeometryDescriptor *
+        createModelGeometry(const resources::ModelGeometry &geometry) noexcept override;
 
         [[nodiscard]] resources::TextureDescriptor *
         createTexture(const resources::TextureInput &textureInput) noexcept override;

@@ -8,19 +8,19 @@
 
 #include <GL/glew.h>
 
-#include "Source/Resources/GraphicsHandleBase.hpp"
+#include "Source/Resources/ModelGeometryDescriptor.hpp"
 
 namespace gle {
 
-    class GraphicsHandle
-            : public resources::GraphicsHandleBase {
+    class ModelGeometryDescriptor
+            : public resources::ModelGeometryDescriptor {
         GLuint m_vao{};
         GLuint m_vbo{};
         GLuint m_ebo{};
 
     public:
         [[nodiscard]] inline constexpr
-        GraphicsHandle(GLuint vao, GLuint vbo, GLuint ebo) noexcept
+        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo) noexcept
                 : m_vao(vao)
                 , m_vbo(vbo)
                 , m_ebo(ebo) {

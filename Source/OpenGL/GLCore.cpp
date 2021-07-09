@@ -51,8 +51,8 @@ constexpr std::string_view g_fragmentShaderCode = R"(
 
 namespace gle {
 
-    resources::GraphicsHandleBase *
-    Core::createModel(const resources::ModelGeometry &geometry) noexcept {
+    resources::ModelGeometryDescriptor *
+    Core::createModelGeometry(const resources::ModelGeometry &geometry) noexcept {
         const auto verticesSize = static_cast<GLsizeiptr>(std::size(geometry.vertices) * sizeof(geometry.vertices[0]));
         const auto indicesSize = static_cast<GLsizeiptr>(std::size(geometry.indices) * sizeof(geometry.indices[0]));
 
@@ -81,7 +81,7 @@ namespace gle {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
-        return &m_graphicsHandles.emplace_back(vao, vbo, ebo);
+        return &m_geometryDescriptors.emplace_back(vao, vbo, ebo);
     }
 
     resources::TextureDescriptor *
@@ -180,7 +180,7 @@ namespace gle {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_textureDescriptors.back().textureID());
 
-        for (const auto &handle : m_graphicsHandles) {
+        for (const auto &handle : m_geometryDescriptors) {
             glBindVertexArray(handle.vao());
             glBindBuffer(GL_ARRAY_BUFFER, handle.vbo());
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle.ebo());
