@@ -11,10 +11,12 @@
 
 #pragma once
 
-#include <compare>
+#include <memory>
 #include <vector>
 
 #include "Source/GraphicsAPI.hpp"
+#include "Source/OpenGL/GraphicsHandle.hpp"
+#include "Source/OpenGL/Resources/ShaderProgram.hpp"
 
 namespace gle {
 
@@ -22,9 +24,23 @@ namespace gle {
             : public GraphicsAPI {
         WindowAPI *m_windowAPI{nullptr};
 
+        std::vector<GraphicsHandle> m_graphicsHandles{};
+
+        std::unique_ptr<ShaderProgram> m_shaderProgram{};
+        GLuint m_shaderAttribPosition{};
+
+        [[nodiscard]] static bool
+        initializeGLEW() noexcept;
+
     public:
+        [[nodiscard]] resources::GraphicsHandleBase *
+        createModel(const resources::ModelGeometry &geometry) noexcept override;
+
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
+
+        void
+        renderEntities() noexcept override;
     };
 
 } // namespace gle
