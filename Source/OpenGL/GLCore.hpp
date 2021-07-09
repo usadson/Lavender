@@ -28,6 +28,7 @@ namespace gle {
 
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
+        GLuint m_shaderAttribColor{};
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;

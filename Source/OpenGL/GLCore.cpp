@@ -22,19 +22,25 @@ constexpr std::string_view g_vertexShaderCode = R"(
     #version 150 core
 
     in vec2 position;
+    in vec3 vertex_color;
+
+    out vec3 fragment_color;
 
     void main() {
         gl_Position = vec4(position, 0.0, 1.0);
+        fragment_color = vertex_color;
     }
 )";
 
 constexpr std::string_view g_fragmentShaderCode = R"(
     #version 150 core
 
+    in vec3 fragment_color;
+
     out vec4 outColor;
 
     void main() {
-        outColor = vec4(1.0, 1.0, 1.0, 1.0);
+        outColor = vec4(fragment_color, 1.0);
     }
 )";
 
@@ -42,6 +48,9 @@ namespace gle {
 
     resources::GraphicsHandleBase *
     Core::createModel(const resources::ModelGeometry &geometry) noexcept {
+        const auto verticesSize = static_cast<GLsizeiptr>(std::size(geometry.vertices) * sizeof(geometry.vertices[0]));
+        const auto indicesSize = static_cast<GLsizeiptr>(std::size(geometry.indices) * sizeof(geometry.indices[0]));
+
         GLuint vao{};
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -50,17 +59,24 @@ namespace gle {
         glGenBuffers(1, &vbo);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(std::size(geometry.vertices) * sizeof(geometry.vertices[0])),
-                     std::data(geometry.vertices), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, verticesSize, std::data(geometry.vertices), GL_STATIC_DRAW);
 
         static_assert(std::is_same_v<GLfloat, float>);
-        glVertexAttribPointer(m_shaderAttribPosition, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(m_shaderAttribPosition, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
+        glVertexAttribPointer(m_shaderAttribColor, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
         glEnableVertexAttribArray(m_shaderAttribPosition);
+        glEnableVertexAttribArray(m_shaderAttribColor);
 
+        GLuint ebo{};
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, std::data(geometry.indices), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
-        return &m_graphicsHandles.emplace_back(vao, vbo);
+        return &m_graphicsHandles.emplace_back(vao, vbo, ebo);
     }
 
     bool
@@ -85,7 +101,7 @@ namespace gle {
         if (!m_shaderProgram->isValid())
             return false;
 
-        const auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
+        auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
         if (location == -1) {
             std::printf("[GL] Core: failed to find attribute location named \"position\"\n");
             return false;
@@ -93,6 +109,16 @@ namespace gle {
 
         m_shaderAttribPosition = static_cast<GLuint>(location);
         glEnableVertexAttribArray(m_shaderAttribPosition);
+
+        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_color");
+        if (location == -1) {
+            std::printf("[GL] Core: failed to find attribute location named \"vertex_color\"\n");
+            return false;
+        }
+
+        m_shaderAttribColor = static_cast<GLuint>(location);
+        glEnableVertexAttribArray(m_shaderAttribColor);
+
         glBindFragDataLocation(m_shaderProgram->programID(), 0, "outColor");
 
         return true;
@@ -120,12 +146,15 @@ namespace gle {
         for (const auto &handle : m_graphicsHandles) {
             glBindVertexArray(handle.vao());
             glBindBuffer(GL_ARRAY_BUFFER, handle.vbo());
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle.ebo());
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        glUseProgram(0);
+//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//        glBindBuffer(GL_ARRAY_BUFFER, 0);
+//        glBindVertexArray(0);
+//
+//        glUseProgram(0);
 
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
