@@ -202,6 +202,11 @@ namespace vke {
             return m_swapChain;
         }
 
+        [[nodiscard]] inline resources::ModelDescriptor *
+        uploadModelDescriptor(resources::ModelDescriptor &&) noexcept override {
+            return {};
+        }
+
         [[nodiscard]] inline constexpr WindowAPI *
         window() noexcept {
             return m_windowAPI;

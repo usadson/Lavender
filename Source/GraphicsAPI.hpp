@@ -38,5 +38,8 @@ public:
     virtual void
     renderEntities() = 0;
 
+    [[nodiscard]] virtual resources::ModelDescriptor *
+    uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept = 0;
+
     virtual ~GraphicsAPI() noexcept = default;
 };

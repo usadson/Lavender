@@ -177,13 +177,14 @@ namespace gle {
 
         glUseProgram(m_shaderProgram->programID());
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_textureDescriptors.back().textureID());
+        for (const auto &descriptor : m_modelDescriptors) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(descriptor.albedoTextureDescriptor())->textureID());
 
-        for (const auto &handle : m_geometryDescriptors) {
-            glBindVertexArray(handle.vao());
-            glBindBuffer(GL_ARRAY_BUFFER, handle.vbo());
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle.ebo());
+            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(descriptor.geometryDescriptor());
+            glBindVertexArray(geometry->vao());
+            glBindBuffer(GL_ARRAY_BUFFER, geometry->vbo());
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         }
 
@@ -211,6 +212,12 @@ namespace gle {
                 return GL_FALSE;
 #endif
         }
+    }
+
+    resources::ModelDescriptor *
+    Core::uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept {
+        m_modelDescriptors.push_back(std::move(modelDescriptor));
+        return &m_modelDescriptors.back();
     }
 
 } // namespace gle

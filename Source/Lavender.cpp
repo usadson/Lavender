@@ -26,33 +26,35 @@ Lavender::run() {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
 
-    static_cast<void>(
-        m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
-            .vertices {
-                -0.5f,  0.5f, 0.0f, 0.0f,
-                 0.5f,  0.5f, 1.0f, 0.0f,
-                 0.5f, -0.5f, 1.0f, 1.0f,
-                -0.5f, -0.5f, 0.0f, 1.0f
-            },
-            .indices {
-                0, 1, 2,
-                2, 3, 0
-            }
-        })
-    );
+    auto *geometry = m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
+        .vertices {
+            -0.5f,  0.5f, 0.0f, 0.0f,
+             0.5f,  0.5f, 1.0f, 0.0f,
+             0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, 0.0f, 1.0f
+        },
+        .indices {
+            0, 1, 2,
+            2, 3, 0
+        }
+    });
 
-    static_cast<void>(
-        m_graphicsAPI->createTexture(resources::TextureInput{
-            resources::TextureFormat::RGB,
-            2,
-            2,
-            {
-                0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-            },
-            true
-        })
-    );
+    auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
+        resources::TextureFormat::RGB,
+        2,
+        2,
+        {
+            0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+        },
+        true
+    });
+
+    resources::ModelDescriptor modelInput{geometry};
+    modelInput.attachTexture(resources::TextureSlot::ALBEDO, texture);
+
+    auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
+    static_cast<void>(model);
 
     while (!m_windowAPI->shouldClose()) {
         m_windowAPI->preLoop();
