@@ -29,15 +29,28 @@ Lavender::run() {
     static_cast<void>(
         m_graphicsAPI->createModel(resources::ModelGeometry{
             .vertices {
-                -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
-                 0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
-                 0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f
+                -0.5f,  0.5f, 0.0f, 0.0f,
+                 0.5f,  0.5f, 1.0f, 0.0f,
+                 0.5f, -0.5f, 1.0f, 1.0f,
+                -0.5f, -0.5f, 0.0f, 1.0f
             },
             .indices {
                 0, 1, 2,
                 2, 3, 0
             }
+        })
+    );
+
+    static_cast<void>(
+        m_graphicsAPI->createTexture(resources::TextureInput{
+            resources::TextureFormat::RGB,
+            2,
+            2,
+            {
+                0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+            },
+            true
         })
     );
 
