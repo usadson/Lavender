@@ -16,12 +16,19 @@ namespace gle {
             : public resources::GraphicsHandleBase {
         GLuint m_vao{};
         GLuint m_vbo{};
+        GLuint m_ebo{};
 
     public:
         [[nodiscard]] inline constexpr
-        GraphicsHandle(GLuint vao, GLuint vbo) noexcept
+        GraphicsHandle(GLuint vao, GLuint vbo, GLuint ebo) noexcept
                 : m_vao(vao)
-                , m_vbo(vbo) {
+                , m_vbo(vbo)
+                , m_ebo(ebo) {
+        }
+
+        [[nodiscard]] inline constexpr GLuint
+        ebo() const noexcept {
+            return m_ebo;
         }
 
         [[nodiscard]] inline constexpr GLuint
