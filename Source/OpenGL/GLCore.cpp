@@ -13,6 +13,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include <cassert>
+
 #include <GL/glew.h>
 
 #include "Source/OpenGL/DebugMessenger.hpp"
@@ -22,25 +24,28 @@ constexpr std::string_view g_vertexShaderCode = R"(
     #version 150 core
 
     in vec2 position;
-    in vec3 vertex_color;
+    in vec2 vertex_textureCoordinates;
 
-    out vec3 fragment_color;
+    out vec2 fragment_textureCoordinates;
 
     void main() {
         gl_Position = vec4(position, 0.0, 1.0);
-        fragment_color = vertex_color;
+        fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
 
 constexpr std::string_view g_fragmentShaderCode = R"(
     #version 150 core
 
-    in vec3 fragment_color;
+    in vec2 fragment_textureCoordinates;
 
     out vec4 outColor;
 
+    uniform sampler2D texAlbedo;
+
     void main() {
-        outColor = vec4(fragment_color, 1.0);
+        vec4 albedoColor = texture(texAlbedo, fragment_textureCoordinates);
+        outColor = albedoColor;
     }
 )";
 
@@ -62,10 +67,10 @@ namespace gle {
         glBufferData(GL_ARRAY_BUFFER, verticesSize, std::data(geometry.vertices), GL_STATIC_DRAW);
 
         static_assert(std::is_same_v<GLfloat, float>);
-        glVertexAttribPointer(m_shaderAttribPosition, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
-        glVertexAttribPointer(m_shaderAttribColor, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
+        glVertexAttribPointer(m_shaderAttribPosition, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
+        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
         glEnableVertexAttribArray(m_shaderAttribPosition);
-        glEnableVertexAttribArray(m_shaderAttribColor);
+        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
         GLuint ebo{};
         glGenBuffers(1, &ebo);
@@ -77,6 +82,31 @@ namespace gle {
         glBindVertexArray(0);
 
         return &m_graphicsHandles.emplace_back(vao, vbo, ebo);
+    }
+
+    resources::TextureDescriptor *
+    Core::createTexture(const resources::TextureInput &textureInput) noexcept {
+        GLuint textureID;
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                     textureInput.width, textureInput.height,
+                     0,
+                     translateTextureFormat(textureInput.format),
+                     GL_FLOAT,
+                     std::data(textureInput.pixels));
+
+        if (textureInput.optGenerateMipmap) {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+
+        return &m_textureDescriptors.emplace_back(textureID);
     }
 
     bool
@@ -110,16 +140,20 @@ namespace gle {
         m_shaderAttribPosition = static_cast<GLuint>(location);
         glEnableVertexAttribArray(m_shaderAttribPosition);
 
-        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_color");
+        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_textureCoordinates");
         if (location == -1) {
-            std::printf("[GL] Core: failed to find attribute location named \"vertex_color\"\n");
+            std::printf("[GL] Core: failed to find attribute location named \"vertex_textureCoordinates\"\n");
             return false;
         }
 
-        m_shaderAttribColor = static_cast<GLuint>(location);
-        glEnableVertexAttribArray(m_shaderAttribColor);
+        m_shaderAttribTextureCoordinates = static_cast<GLuint>(location);
+        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
         glBindFragDataLocation(m_shaderProgram->programID(), 0, "outColor");
+
+        glUseProgram(m_shaderProgram->programID());
+        auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
+        glUniform1i(uniformLocation, 0); // texture bank 0
 
         return true;
     }
@@ -143,6 +177,9 @@ namespace gle {
 
         glUseProgram(m_shaderProgram->programID());
 
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_textureDescriptors.back().textureID());
+
         for (const auto &handle : m_graphicsHandles) {
             glBindVertexArray(handle.vao());
             glBindBuffer(GL_ARRAY_BUFFER, handle.vbo());
@@ -159,6 +196,21 @@ namespace gle {
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
             printf("[GL] Core: Error: %u\n", err);
+    }
+
+    GLenum
+    Core::translateTextureFormat(resources::TextureFormat textureFormat) noexcept {
+        switch (textureFormat) {
+            case resources::TextureFormat::RGB:
+                return GL_RGB;
+            case resources::TextureFormat::RGBA:
+                return GL_RGBA;
+#ifndef __clang__
+            default:
+                assert(false);
+                return GL_FALSE;
+#endif
+        }
     }
 
 } // namespace gle

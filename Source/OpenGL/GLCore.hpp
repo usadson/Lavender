@@ -17,6 +17,7 @@
 #include "Source/GraphicsAPI.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
 #include "Source/OpenGL/Resources/ShaderProgram.hpp"
+#include "Source/OpenGL/TextureDescriptor.hpp"
 
 namespace gle {
 
@@ -25,17 +26,24 @@ namespace gle {
         WindowAPI *m_windowAPI{nullptr};
 
         std::vector<GraphicsHandle> m_graphicsHandles{};
+        std::vector<TextureDescriptor> m_textureDescriptors{};
 
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
-        GLuint m_shaderAttribColor{};
+        GLuint m_shaderAttribTextureCoordinates{};
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;
 
+        [[nodiscard]] static GLenum
+        translateTextureFormat(resources::TextureFormat) noexcept;
+
     public:
         [[nodiscard]] resources::GraphicsHandleBase *
         createModel(const resources::ModelGeometry &geometry) noexcept override;
+
+        [[nodiscard]] resources::TextureDescriptor *
+        createTexture(const resources::TextureInput &textureInput) noexcept override;
 
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
