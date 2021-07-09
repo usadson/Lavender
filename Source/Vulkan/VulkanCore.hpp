@@ -153,6 +153,15 @@ namespace vke {
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
 
+        [[nodiscard]] inline resources::GraphicsHandleBase *
+        createModel(const resources::ModelGeometry &) noexcept override {
+            return {};
+        }
+
+        inline void
+        renderEntities() noexcept override {
+        }
+
         [[nodiscard]] inline decltype(auto)
         allocator() const noexcept {
             return m_allocatorCallbacks;

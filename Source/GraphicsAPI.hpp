@@ -12,6 +12,9 @@
 
 #pragma once
 
+#include "Source/Resources/ModelDescriptor.hpp"
+#include "Source/Resources/ModelGeometry.hpp"
+
 class WindowAPI;
 
 class GraphicsAPI {
@@ -21,8 +24,14 @@ public:
         VULKAN,
     };
 
+    [[nodiscard]] virtual resources::GraphicsHandleBase *
+    createModel(const resources::ModelGeometry &geometry) noexcept = 0;
+
     [[nodiscard]] virtual bool
     initialize(WindowAPI *) = 0;
+
+    virtual void
+    renderEntities() = 0;
 
     virtual ~GraphicsAPI() noexcept = default;
 };
