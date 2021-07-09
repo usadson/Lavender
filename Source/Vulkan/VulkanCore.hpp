@@ -158,6 +158,11 @@ namespace vke {
             return {};
         }
 
+        [[nodiscard]] inline resources::TextureDescriptor *
+        createTexture(const resources::TextureInput &) noexcept override {
+            return {};
+        }
+
         inline void
         renderEntities() noexcept override {
         }

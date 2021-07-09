@@ -14,6 +14,8 @@
 
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
+#include "Source/Resources/TextureDescriptor.hpp"
+#include "Source/Resources/TextureInput.hpp"
 
 class WindowAPI;
 
@@ -26,6 +28,9 @@ public:
 
     [[nodiscard]] virtual resources::GraphicsHandleBase *
     createModel(const resources::ModelGeometry &geometry) noexcept = 0;
+
+    [[nodiscard]] virtual resources::TextureDescriptor *
+    createTexture(const resources::TextureInput &textureInput) noexcept = 0;
 
     [[nodiscard]] virtual bool
     initialize(WindowAPI *) = 0;
