@@ -11,11 +11,13 @@
 namespace resources {
 
     struct ModelGeometry {
-        using VertexType = float;
         using IndexType = unsigned int;
+        using TextureCoordType = float;
+        using VertexType = float;
 
-        std::vector<VertexType> vertices{};
         std::vector<IndexType> indices{};
+        std::vector<TextureCoordType> textureCoordinates{};
+        std::vector<VertexType> vertices{};
     };
 
 } // namespace resources

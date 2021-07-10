@@ -17,13 +17,15 @@ namespace gle {
         GLuint m_vao{};
         GLuint m_vbo{};
         GLuint m_ebo{};
+        GLuint m_tbo{};
 
     public:
         [[nodiscard]] inline constexpr
-        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo) noexcept
+        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo) noexcept
                 : m_vao(vao)
                 , m_vbo(vbo)
-                , m_ebo(ebo) {
+                , m_ebo(ebo)
+                , m_tbo(tbo) {
         }
 
         [[nodiscard]] inline constexpr GLuint
@@ -34,6 +36,11 @@ namespace gle {
         [[nodiscard]] inline constexpr GLuint
         vao() const noexcept {
             return m_vao;
+        }
+
+        [[nodiscard]] inline constexpr GLuint
+        tbo() const noexcept {
+            return m_tbo;
         }
 
         [[nodiscard]] inline constexpr GLuint

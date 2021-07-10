@@ -67,8 +67,12 @@ namespace gle {
         glBufferData(GL_ARRAY_BUFFER, verticesSize, std::data(geometry.vertices), GL_STATIC_DRAW);
 
         static_assert(std::is_same_v<GLfloat, float>);
-        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
-        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        auto tbo = createTextureBuffer(geometry.textureCoordinates);
+        if (!tbo.has_value())
+            return nullptr;
+
         glEnableVertexAttribArray(m_shaderAttribPosition);
         glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
@@ -81,7 +85,7 @@ namespace gle {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
-        return &m_geometryDescriptors.emplace_back(vao, vbo, ebo);
+        return &m_geometryDescriptors.emplace_back(vao, vbo, ebo, tbo.value());
     }
 
     resources::TextureDescriptor *
@@ -107,6 +111,25 @@ namespace gle {
         }
 
         return &m_textureDescriptors.emplace_back(textureID);
+    }
+
+    std::optional<unsigned int>
+    Core::createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &textureCoordinates) const noexcept {
+        GLuint tbo{};
+
+        glGenBuffers(1, &tbo);
+        if (glGetError() != GL_NO_ERROR)
+            return std::nullopt;
+
+        glBindBuffer(GL_ARRAY_BUFFER, tbo);
+
+        const auto size = static_cast<GLsizeiptr>(std::size(textureCoordinates) * sizeof(textureCoordinates[0]));
+        glBufferData(GL_ARRAY_BUFFER, size, std::data(textureCoordinates), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, false, 0, nullptr);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return tbo;
     }
 
     bool
@@ -183,7 +206,7 @@ namespace gle {
 
             const auto *geometry = static_cast<const ModelGeometryDescriptor *>(descriptor.geometryDescriptor());
             glBindVertexArray(geometry->vao());
-            glBindBuffer(GL_ARRAY_BUFFER, geometry->vbo());
+//            glBindBuffer(GL_ARRAY_BUFFER, geometry->vbo());
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         }

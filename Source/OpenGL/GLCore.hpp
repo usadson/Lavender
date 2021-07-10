@@ -12,12 +12,14 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "Source/GraphicsAPI.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
 #include "Source/OpenGL/Resources/ShaderProgram.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
+#include "Source/Resources/ModelGeometry.hpp"
 
 namespace gle {
 
@@ -32,6 +34,9 @@ namespace gle {
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
         GLuint m_shaderAttribTextureCoordinates{};
+
+        [[nodiscard]] std::optional<unsigned int>
+        createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &) const noexcept;
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;
