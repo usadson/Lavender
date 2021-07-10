@@ -23,13 +23,13 @@
 constexpr std::string_view g_vertexShaderCode = R"(
     #version 150 core
 
-    in vec2 position;
+    in vec3 position;
     in vec2 vertex_textureCoordinates;
 
     out vec2 fragment_textureCoordinates;
 
     void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
+        gl_Position = vec4(position, 1.0);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
@@ -67,8 +67,8 @@ namespace gle {
         glBufferData(GL_ARRAY_BUFFER, verticesSize, std::data(geometry.vertices), GL_STATIC_DRAW);
 
         static_assert(std::is_same_v<GLfloat, float>);
-        glVertexAttribPointer(m_shaderAttribPosition, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
-        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
+        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
+        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
         glEnableVertexAttribArray(m_shaderAttribPosition);
         glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
