@@ -138,6 +138,8 @@ namespace gle {
         if (!initializeGLEW())
             return false;
 
+        const auto contextVersion = m_windowAPI->queryGLContextVersion();
+
         DebugMessenger::setup();
 
         const auto size = m_windowAPI->queryFramebufferSize();
@@ -178,7 +180,18 @@ namespace gle {
         auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
         glUniform1i(uniformLocation, 0); // texture bank 0
 
-        return true;
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+        glFrontFace(GL_CW);
+        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+
+        if (contextVersion.major >= 3) {
+            glEnable(GL_FRAMEBUFFER_SRGB);
+        }
+
+        return glGetError() == GL_NO_ERROR;
     }
 
     bool
@@ -195,7 +208,6 @@ namespace gle {
 
     void
     Core::renderEntities() noexcept {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(m_shaderProgram->programID());
