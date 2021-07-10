@@ -17,6 +17,7 @@
 
 #include <GL/glew.h>
 
+#include "Source/ECS/EntityList.hpp"
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
@@ -212,13 +213,12 @@ namespace gle {
 
         glUseProgram(m_shaderProgram->programID());
 
-        for (const auto &descriptor : m_modelDescriptors) {
+        for (const auto &entity : m_entityList->data()) {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(descriptor.albedoTextureDescriptor())->textureID());
+            glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(entity.modelDescriptor()->albedoTextureDescriptor())->textureID());
 
-            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(descriptor.geometryDescriptor());
+            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity.modelDescriptor()->geometryDescriptor());
             glBindVertexArray(geometry->vao());
-//            glBindBuffer(GL_ARRAY_BUFFER, geometry->vbo());
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         }
