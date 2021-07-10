@@ -19,6 +19,8 @@ namespace base {
 
         FAILED_INITIALISING_WINDOW_API,
 
+        FAILED_LOADING_TEXTURE,
+
     };
 
     [[nodiscard]] inline constexpr std::string_view
@@ -28,6 +30,7 @@ namespace base {
             case ExitStatus::FAILED_CHOOSING_GRAPHICS_API: return "failed-choosing-graphics-api";
             case ExitStatus::FAILED_INITIALISING_GRAPHICS_API: return "failed-initialising-graphics-api";
             case ExitStatus::FAILED_INITIALISING_WINDOW_API: return "failed-initialising-window-api";
+            case ExitStatus::FAILED_LOADING_TEXTURE: return "failed-loading-texture";
             default: return "(invalid)";
         }
     }
