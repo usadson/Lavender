@@ -10,26 +10,26 @@
 
 namespace base {
 	
-	enum class ExitStatus {
+    enum class ExitStatus {
 
-		SUCCESS,
+        SUCCESS,
 
-		FAILED_CHOOSING_GRAPHICS_API,
-		FAILED_INITIALISING_GRAPHICS_API,
+        FAILED_CHOOSING_GRAPHICS_API,
+        FAILED_INITIALISING_GRAPHICS_API,
 
-		FAILED_INITIALISING_WINDOW_API,
+        FAILED_INITIALISING_WINDOW_API,
 
-	};
+    };
 
-	[[nodiscard]] inline constexpr std::string_view
-	translateExitStatusToStringView(ExitStatus status) noexcept {
-		switch (status) {
-			case ExitStatus::SUCCESS: return "success";
-			case ExitStatus::FAILED_CHOOSING_GRAPHICS_API: return "failed-choosing-graphics-api";
-			case ExitStatus::FAILED_INITIALISING_GRAPHICS_API: return "failed-initialising-graphics-api";
-			case ExitStatus::FAILED_INITIALISING_WINDOW_API: return "failed-initialising-window-api";
-			default: return "(invalid)";
-		}
-	}
+    [[nodiscard]] inline constexpr std::string_view
+    translateExitStatusToStringView(ExitStatus status) noexcept {
+        switch (status) {
+            case ExitStatus::SUCCESS: return "success";
+            case ExitStatus::FAILED_CHOOSING_GRAPHICS_API: return "failed-choosing-graphics-api";
+            case ExitStatus::FAILED_INITIALISING_GRAPHICS_API: return "failed-initialising-graphics-api";
+            case ExitStatus::FAILED_INITIALISING_WINDOW_API: return "failed-initialising-window-api";
+            default: return "(invalid)";
+        }
+    }
 
 } // namespace Base
