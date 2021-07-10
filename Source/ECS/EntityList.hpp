@@ -40,6 +40,11 @@ namespace ecs {
             return &m_entities.emplace_back(args...);
         }
 
+        [[nodiscard]] inline const std::vector<Entity> &
+        data() const noexcept {
+            return m_entities;
+        }
+
         inline void
         remove(Entity *entity) noexcept {
             auto it = std::find_if(std::begin(m_entities), std::end(m_entities), [entity] (const Entity &vEntity) {
