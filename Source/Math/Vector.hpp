@@ -8,7 +8,10 @@
 
 #include <array>
 
+#include <cmath>
 #include <cstdint>
+
+#include "Source/Math/Math.hpp"
 
 namespace math {
 
@@ -49,6 +52,122 @@ namespace math {
         w() const noexcept
                 requires(Dimensions >= 4) {
             return m_data[3];
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        add(const Vector<Type, Dimensions> &other) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] += other.m_data[i];
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        add(Type value) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] += value;
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        subtract(const Vector<Type, Dimensions> &other) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] -= other.m_data[i];
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        sub(Type value) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] -= value;
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        mul(const Vector<Type, Dimensions> &other) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] *= other.m_data[i];
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        mul(Type value) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] *= value;
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        div(const Vector<Type, Dimensions> &other) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] /= other.m_data[i];
+            return result;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        div(Type value) const noexcept {
+            Vector result(*this);
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                result.m_data[i] /= value;
+            return result;
+        }
+
+        [[nodiscard]] inline Type
+        cross(const Vector<Type, 3> &other) const noexcept
+                requires(Dimensions == 3) {
+            const auto cx = y() * other.z() - z() * other.y();
+            const auto cy = z() * other.x() - x() * other.z();
+            const auto cz = x() * other.y() - y() * other.z();
+            return Vector<Type, 3>(cx, cy, cz);
+        }
+
+        [[nodiscard]] inline Type
+        dot(const Vector<Type, Dimensions> &other) const noexcept {
+            Type total = 0;
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                total += this->m_data[i] * other.m_data[i];
+            return total;
+        }
+
+        [[nodiscard]] inline Type
+        length() const noexcept {
+            Type total = 0;
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                total += m_data[i] * m_data[i];
+            return std::sqrt(total);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions> &
+        normalize() noexcept {
+            const auto length = this->length();
+
+            for (std::size_t i = 0; i < Dimensions; ++i)
+                m_data[i] /= length;
+
+            return *this;
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        normalizeCopy() const noexcept {
+            return Vector(*this).normalize();
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        rotate(Type angleDegrees) const noexcept {
+            const auto rad = toRadians(angleDegrees);
+            const auto cos = static_cast<Type>(std::cos(rad));
+            const auto sin = static_cast<Type>(std::sin(rad));
+
+            if constexpr (Dimensions == 2)
+                return {x() * cos - y() * sin,
+                        x() * sin + y() * cos};
+            return {};
         }
     };
 
