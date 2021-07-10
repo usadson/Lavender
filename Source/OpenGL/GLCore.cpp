@@ -91,31 +91,6 @@ namespace gle {
         return &m_geometryDescriptors.emplace_back(vao, vbo, ebo, tbo.value());
     }
 
-    resources::TextureDescriptor *
-    Core::createTexture(const resources::TextureInput &textureInput) noexcept {
-        GLuint textureID;
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                     textureInput.width, textureInput.height,
-                     0,
-                     translateTextureFormat(textureInput.format),
-                     GL_FLOAT,
-                     std::data(textureInput.pixels));
-
-        if (textureInput.optGenerateMipmap) {
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-
-        return &m_textureDescriptors.emplace_back(textureID);
-    }
-
     std::optional<unsigned int>
     Core::createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &textureCoordinates) const noexcept {
         GLuint tbo{};
@@ -237,21 +212,6 @@ namespace gle {
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
             printf("[GL] Core: Error: %u\n", err);
-    }
-
-    GLenum
-    Core::translateTextureFormat(resources::TextureFormat textureFormat) noexcept {
-        switch (textureFormat) {
-            case resources::TextureFormat::RGB:
-                return GL_RGB;
-            case resources::TextureFormat::RGBA:
-                return GL_RGBA;
-#ifndef __clang__
-            default:
-                assert(false);
-                return GL_FALSE;
-#endif
-        }
     }
 
     resources::ModelDescriptor *

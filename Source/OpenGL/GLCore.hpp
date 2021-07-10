@@ -44,9 +44,6 @@ namespace gle {
         [[nodiscard]] static bool
         initializeGLEW() noexcept;
 
-        [[nodiscard]] static GLenum
-        translateTextureFormat(resources::TextureFormat) noexcept;
-
     public:
         [[nodiscard]] inline explicit
         Core(const ecs::EntityList *entityList) noexcept
