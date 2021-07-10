@@ -21,7 +21,7 @@ Lavender::run() {
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
 //	m_graphicsAPI = std::make_unique<vke::Core>();
-    m_graphicsAPI = std::make_unique<gle::Core>();
+    m_graphicsAPI = std::make_unique<gle::Core>(&m_entityList);
     if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
@@ -60,7 +60,8 @@ Lavender::run() {
     modelInput.attachTexture(resources::TextureSlot::ALBEDO, texture);
 
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
-    static_cast<void>(model);
+
+    m_entityList.create(model);
 
     while (!m_windowAPI->shouldClose()) {
         m_windowAPI->preLoop();
