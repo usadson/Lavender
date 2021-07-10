@@ -64,14 +64,23 @@ Lavender::run() {
     entity->transformation().rotation = {0.0f, 0.0f, 0.0f};
 
     float temp = 0;
+    std::uint16_t frameCount{0};
     while (!m_windowAPI->shouldClose()) {
+        ++frameCount;
+
         const auto thisFrameTime = std::chrono::steady_clock::now();
         const auto deltaTime = duration_cast<std::chrono::duration<float>>(thisFrameTime - previousFrameTime).count();
         previousFrameTime = thisFrameTime;
 
+        temp += deltaTime;
+        if (temp >= 1.0f) {
+            temp -= 1;
+            std::printf("[Lavender] FPS: %hu (deltaTime=%f)\n", frameCount, static_cast<double>(deltaTime));
+            frameCount = 0;
+        }
+
         m_windowAPI->preLoop();
 
-        temp += deltaTime;
         entity->transformation().rotation = {0.0f, 0.0f, std::sin(temp) * 180};
         m_graphicsAPI->renderEntities();
 
