@@ -54,7 +54,40 @@ namespace math {
         }
 
         [[nodiscard]] inline constexpr Matrix4x4 &
-        mul(const Matrix4x4<Type> &other) noexcept {
+        rotate(const Vector<Type, 3> &vector) noexcept {
+            Matrix4x4<Type> rx, ry, rz;
+
+            const auto x = toRadians(vector.x());
+            const auto y = toRadians(vector.y());
+            const auto z = toRadians(vector.z());
+
+            rx.m_data = std::array<std::array<Type, 4>, 4>{{
+                {1, 0, 0, 0},
+                {0, std::cos(x), -std::sin(x), 0},
+                {0, std::sin(x), std::cos(x), 0},
+                {0, 0, 0, 1}
+            }};
+
+            ry.m_data = std::array<std::array<Type, 4>, 4>{{
+                {std::cos(y), 0, -std::sin(y), 0},
+                {0,           1, 0,            0},
+                {std::sin(y), 0, std::cos(y),  0},
+                {0,           0, 0,            1}
+            }};
+
+            rz.m_data = std::array<std::array<Type, 4>, 4>{{
+                {std::cos(z), -std::sin(z), 0, 0},
+                {std::sin(z), std::cos(z), 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+            }};
+
+            m_data = rz.mul(ry.mul(rx)).m_data;
+            return *this;
+        }
+
+        [[nodiscard]] inline constexpr Matrix4x4
+        mul(const Matrix4x4<Type> &other) const noexcept {
             Matrix4x4<Type> result{};
 
             for (std::size_t x = 0; x < 4; ++x) {
