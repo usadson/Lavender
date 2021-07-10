@@ -3,9 +3,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 add_library(LavenderCore OBJECT
-  "GraphicsAPI.hpp"
-  "Lavender.cpp"
-  "Lavender.hpp")
+            GraphicsAPI.hpp
+            Lavender.cpp
+            Lavender.hpp
+)
 
 add_executable(Lavender main.cpp)
 
