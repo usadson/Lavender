@@ -45,6 +45,11 @@ namespace gle {
         translateTextureFormat(resources::TextureFormat) noexcept;
 
     public:
+        [[nodiscard]] inline explicit
+        Core(const ecs::EntityList *entityList) noexcept
+                : GraphicsAPI(entityList) {
+        }
+
         [[nodiscard]] resources::ModelGeometryDescriptor *
         createModelGeometry(const resources::ModelGeometry &geometry) noexcept override;
 

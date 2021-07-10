@@ -150,6 +150,11 @@ namespace vke {
         setupDebugMessenger();
 
     public:
+        [[nodiscard]] inline explicit
+        Core(const ecs::EntityList *entityList) noexcept
+                : GraphicsAPI(entityList) {
+        }
+
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
 

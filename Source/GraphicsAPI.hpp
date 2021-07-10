@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "Source/ECS/EntityList.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
 #include "Source/Resources/TextureDescriptor.hpp"
@@ -20,7 +21,14 @@
 class WindowAPI;
 
 class GraphicsAPI {
+protected:
+    const ecs::EntityList *m_entityList;
 public:
+    [[nodiscard]] inline constexpr explicit
+    GraphicsAPI(const ecs::EntityList *entityList) noexcept
+            : m_entityList(entityList) {
+    }
+
     enum class Name {
         OPENGL,
         VULKAN,
@@ -31,6 +39,11 @@ public:
 
     [[nodiscard]] virtual resources::TextureDescriptor *
     createTexture(const resources::TextureInput &textureInput) noexcept = 0;
+
+    [[nodiscard]] inline constexpr const ecs::EntityList *
+    entityList() const noexcept {
+        return m_entityList;
+    }
 
     [[nodiscard]] virtual bool
     initialize(WindowAPI *) = 0;
