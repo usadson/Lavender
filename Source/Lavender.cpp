@@ -46,13 +46,7 @@ Lavender::run() {
     });
 
     auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
-        resources::TextureFormat::RGB,
-        2,
-        2,
-        {
-            0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-        },
+        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
         true
     });
 
@@ -62,7 +56,7 @@ Lavender::run() {
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
     auto *entity = m_entityList.create(model);
-    entity->transformation().translation = {1.0f, 0.0f, 0.0f};
+    entity->transformation().translation = {0.0f, 0.0f, 0.0f};
 
     while (!m_windowAPI->shouldClose()) {
         m_windowAPI->preLoop();
