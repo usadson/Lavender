@@ -13,13 +13,13 @@ namespace math {
     template <typename Type>
     [[nodiscard]] inline constexpr Type
     toDegrees(Type radians) noexcept {
-        return (radians * 180) / M_PI;
+        return (radians * 180) / static_cast<Type>(M_PI);
     }
 
     template <typename Type>
     [[nodiscard]] inline constexpr Type
     toRadians(Type degrees) noexcept {
-        return (degrees * M_PI) / 180;
+        return (degrees * static_cast<Type>(M_PI)) / 180;
     }
 
 } // namespace math
