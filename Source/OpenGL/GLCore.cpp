@@ -29,8 +29,10 @@ constexpr std::string_view g_vertexShaderCode = R"(
 
     out vec2 fragment_textureCoordinates;
 
+    uniform mat4 u_transform;
+
     void main() {
-        gl_Position = vec4(position, 1.0);
+        gl_Position = u_transform * vec4(position, 1.0);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
@@ -180,6 +182,7 @@ namespace gle {
         glUseProgram(m_shaderProgram->programID());
         auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
         glUniform1i(uniformLocation, 0); // texture bank 0
+        m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -216,6 +219,8 @@ namespace gle {
         for (const auto &entity : m_entityList->data()) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(entity.modelDescriptor()->albedoTextureDescriptor())->textureID());
+
+            m_uniformTransformation.store(entity.transformation().toMatrix());
 
             const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity.modelDescriptor()->geometryDescriptor());
             glBindVertexArray(geometry->vao());

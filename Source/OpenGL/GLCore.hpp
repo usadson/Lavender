@@ -18,6 +18,7 @@
 #include "Source/GraphicsAPI.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
 #include "Source/OpenGL/Resources/ShaderProgram.hpp"
+#include "Source/OpenGL/Resources/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
 
@@ -34,6 +35,8 @@ namespace gle {
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
         GLuint m_shaderAttribTextureCoordinates{};
+
+        UniformMatrix4 m_uniformTransformation{-1};
 
         [[nodiscard]] std::optional<unsigned int>
         createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &) const noexcept;
