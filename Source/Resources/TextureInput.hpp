@@ -6,25 +6,12 @@
 
 #pragma once
 
-#include <vector>
-
-#include <cstdint>
+#include <string_view>
 
 namespace resources {
 
-    enum class TextureFormat {
-        RGB,
-        RGBA,
-    };
-
     struct TextureInput {
-        using PixelType = float;
-        using SizeType = std::uint16_t;
-
-        TextureFormat format;
-        SizeType width;
-        SizeType height;
-        std::vector<PixelType> pixels;
+        std::string_view fileName;
 
         bool optGenerateMipmap{true};
     };
