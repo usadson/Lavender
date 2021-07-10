@@ -9,12 +9,15 @@
 #include <memory>
 
 #include "Source/Base/ExitStatus.hpp"
+#include "Source/ECS/EntityList.hpp"
 #include "Source/Window/WindowAPI.hpp"
 #include "Source/GraphicsAPI.hpp"
 
 class Lavender {
     std::unique_ptr<GraphicsAPI> m_graphicsAPI{nullptr};
     std::unique_ptr<WindowAPI> m_windowAPI{ nullptr };
+
+    ecs::EntityList m_entityList{};
 
 public:
     [[nodiscard]] base::ExitStatus
