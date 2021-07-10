@@ -12,8 +12,9 @@
 namespace math {
 
     struct Transformation {
-        Vector<float, 3> translation;
-        Vector<float, 3> rotation;
+        Vector<float, 3> translation{};
+        Vector<float, 3> rotation{};
+        Vector<float, 3> scaling{1.0f, 1.0f, 1.0f};
 
         [[nodiscard]] Matrix4x4<float>
         toMatrix() const noexcept {
@@ -22,8 +23,9 @@ namespace math {
 
             const auto translationMatrix = Matrix4x4<float>().translate(translation);
             const auto rotationMatrix = Matrix4x4<float>().rotate(rotation);
+            const auto scalingMatrix = Matrix4x4<float>().scale(scaling);
 
-            return translationMatrix.mul(rotationMatrix);
+            return translationMatrix.mul(rotationMatrix.mul(scalingMatrix));
         }
     };
 
