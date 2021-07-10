@@ -6,12 +6,16 @@
 
 #include "Lavender.hpp"
 
+#include <chrono>
+
 #include "Source/OpenGL/GLCore.hpp"
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
 
 base::ExitStatus
 Lavender::run() {
+    auto previousFrameTime = std::chrono::steady_clock::now();
+
     m_windowAPI = std::make_unique<window::GLFWCore>();
     if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
         return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
@@ -57,10 +61,18 @@ Lavender::run() {
 
     auto *entity = m_entityList.create(model);
     entity->transformation().translation = {0.0f, 0.0f, 0.0f};
+    entity->transformation().rotation = {0.0f, 0.0f, 0.0f};
 
+    float temp = 0;
     while (!m_windowAPI->shouldClose()) {
+        const auto thisFrameTime = std::chrono::steady_clock::now();
+        const auto deltaTime = duration_cast<std::chrono::duration<float>>(thisFrameTime - previousFrameTime).count();
+        previousFrameTime = thisFrameTime;
+
         m_windowAPI->preLoop();
 
+        temp += deltaTime;
+        entity->transformation().rotation = {0.0f, 0.0f, std::sin(temp) * 180};
         m_graphicsAPI->renderEntities();
 
         m_windowAPI->postLoop();

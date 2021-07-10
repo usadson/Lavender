@@ -13,13 +13,17 @@ namespace math {
 
     struct Transformation {
         Vector<float, 3> translation;
+        Vector<float, 3> rotation;
 
         [[nodiscard]] Matrix4x4<float>
         toMatrix() const noexcept {
             // TODO maybe its better to only calculate this when something
             //      changes, and cache the result of that.
 
-            return Matrix4x4<float>().translate(translation);
+            const auto translationMatrix = Matrix4x4<float>().translate(translation);
+            const auto rotationMatrix = Matrix4x4<float>().rotate(rotation);
+
+            return translationMatrix.mul(rotationMatrix);
         }
     };
 
