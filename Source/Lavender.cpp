@@ -12,6 +12,16 @@
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
 
+void
+Lavender::update(float deltaTime) noexcept {
+    m_mainEntity->transformation().scaling = math::Vector<float, 3>{deltaTime * 1000, deltaTime * 1000, deltaTime * 1000};
+}
+
+void
+Lavender::render() noexcept {
+    m_graphicsAPI->renderEntities();
+}
+
 base::ExitStatus
 Lavender::run() {
     auto previousFrameTime = std::chrono::steady_clock::now();
@@ -61,10 +71,7 @@ Lavender::run() {
 
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
-    auto *entity = m_entityList.create(model);
-    entity->transformation().translation = {0.0f, 0.0f, 0.0f};
-    entity->transformation().rotation = {0.0f, 0.0f, 0.0f};
-    entity->transformation().scaling = {1.0f, 1.0f, 1.0f};
+    m_mainEntity = m_entityList.create(model);
 
     float temp = 0;
     std::uint16_t frameCount{0};
@@ -82,12 +89,10 @@ Lavender::run() {
             frameCount = 0;
         }
 
+        update(deltaTime);
+
         m_windowAPI->preLoop();
-
-        auto val = std::sin(temp);
-        entity->transformation().scaling = math::Vector<float, 3>{val, val, val};
-        m_graphicsAPI->renderEntities();
-
+        render();
         m_windowAPI->postLoop();
     }
 

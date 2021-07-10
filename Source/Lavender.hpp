@@ -18,6 +18,13 @@ class Lavender {
     std::unique_ptr<WindowAPI> m_windowAPI{ nullptr };
 
     ecs::EntityList m_entityList{};
+    ecs::Entity *m_mainEntity{nullptr};
+
+    void
+    render() noexcept;
+
+    void
+    update(float deltaTime) noexcept;
 
 public:
     [[nodiscard]] base::ExitStatus
