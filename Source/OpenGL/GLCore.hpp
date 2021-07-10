@@ -39,7 +39,13 @@ namespace gle {
         UniformMatrix4 m_uniformTransformation{-1};
 
         [[nodiscard]] std::optional<unsigned int>
+        createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
+
+        [[nodiscard]] std::optional<unsigned int>
         createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &) const noexcept;
+
+        [[nodiscard]] std::optional<unsigned int>
+        createVertexBuffer(const std::vector<resources::ModelGeometry::VertexType> &) const noexcept;
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;

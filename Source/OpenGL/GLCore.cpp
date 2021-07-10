@@ -54,23 +54,21 @@ constexpr std::string_view g_fragmentShaderCode = R"(
 
 namespace gle {
 
+    static_assert(std::is_same_v<GLfloat, float>);
+
     resources::ModelGeometryDescriptor *
     Core::createModelGeometry(const resources::ModelGeometry &geometry) noexcept {
-        const auto verticesSize = static_cast<GLsizeiptr>(std::size(geometry.vertices) * sizeof(geometry.vertices[0]));
-        const auto indicesSize = static_cast<GLsizeiptr>(std::size(geometry.indices) * sizeof(geometry.indices[0]));
-
         GLuint vao{};
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
-        GLuint vbo{};
-        glGenBuffers(1, &vbo);
+        auto ebo = createElementBuffer(geometry.indices);
+        if (!ebo.has_value())
+            return nullptr;
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, verticesSize, std::data(geometry.vertices), GL_STATIC_DRAW);
-
-        static_assert(std::is_same_v<GLfloat, float>);
-        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        auto vbo = createVertexBuffer(geometry.vertices);
+        if (!vbo.has_value())
+            return nullptr;
 
         auto tbo = createTextureBuffer(geometry.textureCoordinates);
         if (!tbo.has_value())
@@ -79,16 +77,25 @@ namespace gle {
         glEnableVertexAttribArray(m_shaderAttribPosition);
         glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
+        glBindVertexArray(0);
+        return &m_geometryDescriptors.emplace_back(vao, vbo.value(), ebo.value(), tbo.value());
+    }
+
+    std::optional<unsigned int>
+    Core::createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &indices) const noexcept {
         GLuint ebo{};
+
         glGenBuffers(1, &ebo);
+        if (glGetError() != GL_NO_ERROR)
+            return std::nullopt;
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, std::data(geometry.indices), GL_STATIC_DRAW);
+
+        const auto size = static_cast<GLsizeiptr>(std::size(indices) * sizeof(indices[0]));
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, std::data(indices), GL_STATIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-
-        return &m_geometryDescriptors.emplace_back(vao, vbo, ebo, tbo.value());
+        return ebo;
     }
 
     std::optional<unsigned int>
@@ -108,6 +115,25 @@ namespace gle {
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return tbo;
+    }
+
+    std::optional<unsigned int>
+    Core::createVertexBuffer(const std::vector<resources::ModelGeometry::VertexType> &vertices) const noexcept {
+        GLuint vbo{};
+
+        glGenBuffers(1, &vbo);
+        if (glGetError() != GL_NO_ERROR)
+            return std::nullopt;
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        const auto size = static_cast<GLsizeiptr>(std::size(vertices) * sizeof(vertices[0]));
+        glBufferData(GL_ARRAY_BUFFER, size, std::data(vertices), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return vbo;
     }
 
     bool
