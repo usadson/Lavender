@@ -6,12 +6,21 @@
 
 #pragma once
 
+#include "Source/Math/Matrix4x4.hpp"
 #include "Source/Math/Vector.hpp"
 
 namespace math {
 
     struct Transformation {
         Vector<float, 3> translation;
+
+        [[nodiscard]] Matrix4x4<float>
+        toMatrix() const noexcept {
+            // TODO maybe its better to only calculate this when something
+            //      changes, and cache the result of that.
+
+            return Matrix4x4<float>().translate(translation);
+        }
     };
 
 } // namespace math
