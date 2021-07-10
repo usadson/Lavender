@@ -86,6 +86,17 @@ namespace math {
             return *this;
         }
 
+        [[nodiscard]] inline constexpr Matrix4x4 &
+        scale(const Vector<Type, 3> &vector) noexcept {
+            m_data = std::array<std::array<Type, 4>, 4>{{
+                {vector.x(), 0,          0,          0},
+                {0,          vector.y(), 0,          0},
+                {0,          0,          vector.z(), 0},
+                {0,          0,          0,          1}
+            }};
+            return *this;
+        }
+
         [[nodiscard]] inline constexpr Matrix4x4
         mul(const Matrix4x4<Type> &other) const noexcept {
             Matrix4x4<Type> result{};
