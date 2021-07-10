@@ -61,7 +61,8 @@ Lavender::run() {
 
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
-    m_entityList.create(model);
+    auto *entity = m_entityList.create(model);
+    entity->transformation().translation = {1.0f, 0.0f, 0.0f};
 
     while (!m_windowAPI->shouldClose()) {
         m_windowAPI->preLoop();
