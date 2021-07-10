@@ -44,6 +44,14 @@ namespace window {
         [[nodiscard]] utils::Version<int>
         queryGLContextVersion() const noexcept override;
 
+        /**
+         * Request to the underlying API to enable or disable VSync. Please note
+         * that this is just a request, and doesn't have to be honored. The
+         * OpenGL driver or OS may reject this request if it wants to.
+         */
+        void
+        requestVSyncMode(bool enabled) noexcept override;
+
         [[nodiscard]] bool
         shouldClose() override;
 

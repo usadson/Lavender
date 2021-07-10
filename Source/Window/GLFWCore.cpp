@@ -128,6 +128,15 @@ namespace window {
         };
     }
 
+    void
+    GLFWCore::requestVSyncMode(bool enabled) noexcept {
+        if (enabled) {
+            glfwSwapInterval(1);
+        } else {
+            glfwSwapInterval(0);
+        }
+    }
+
     bool
     GLFWCore::shouldClose() {
         return glfwWindowShouldClose(m_window);

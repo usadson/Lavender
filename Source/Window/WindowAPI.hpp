@@ -39,6 +39,9 @@ public:
     [[nodiscard]] virtual utils::Version<int>
     queryGLContextVersion() const noexcept = 0;
 
+    virtual void
+    requestVSyncMode(bool enabled) noexcept = 0;
+
     [[nodiscard]] virtual bool
     shouldClose() = 0;
 

@@ -21,6 +21,8 @@ Lavender::run() {
         return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
     }
 
+    m_windowAPI->requestVSyncMode(false);
+
     auto glVersion = m_windowAPI->queryGLContextVersion();
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
@@ -81,7 +83,7 @@ Lavender::run() {
 
         m_windowAPI->preLoop();
 
-        entity->transformation().rotation = {0.0f, 0.0f, std::sin(temp) * 180};
+        entity->transformation().rotation = {0.0f, 0.0f, entity->transformation().rotation.z() + deltaTime};
         m_graphicsAPI->renderEntities();
 
         m_windowAPI->postLoop();
