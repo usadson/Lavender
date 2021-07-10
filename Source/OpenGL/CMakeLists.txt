@@ -12,6 +12,7 @@ add_library(OpenGLAPIEngine OBJECT
         GraphicsHandle.hpp
         Resources/Shader.cpp
         Resources/ShaderProgram.cpp
+        Resources/Uniform.cpp
 )
 
 target_link_libraries(OpenGLAPIEngine
