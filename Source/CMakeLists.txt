@@ -27,4 +27,5 @@ target_link_libraries(Lavender
           LavenderCore
           OpenGLAPIEngine
           VulkanAPIEngine
+          nlohmann_json::nlohmann_json
 )
