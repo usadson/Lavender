@@ -78,7 +78,7 @@ namespace gle {
          * TODO: Should be called when the window resizes.
          */
         void
-        onResize(math::Size2D<std::uint32_t>) noexcept;
+        onResize(math::Size2D<std::uint32_t>) noexcept override;
 
         void
         renderEntities() noexcept override;

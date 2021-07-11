@@ -12,7 +12,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "Source/ECS/EntityList.hpp"
+#include "Source/Math/Size2D.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
 #include "Source/Resources/TextureDescriptor.hpp"
@@ -55,6 +58,9 @@ public:
         static_cast<void>(fileName);
         return nullptr;
     }
+
+    virtual inline void
+    onResize(math::Size2D<std::uint32_t>) noexcept {}
 
     virtual void
     renderEntities() = 0;
