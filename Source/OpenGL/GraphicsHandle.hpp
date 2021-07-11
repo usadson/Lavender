@@ -18,14 +18,16 @@ namespace gle {
         GLuint m_vbo{};
         GLuint m_ebo{};
         GLuint m_tbo{};
+        GLsizei m_indexCount{};
 
     public:
         [[nodiscard]] inline constexpr
-        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo) noexcept
+        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLsizei indexCount) noexcept
                 : m_vao(vao)
                 , m_vbo(vbo)
                 , m_ebo(ebo)
-                , m_tbo(tbo) {
+                , m_tbo(tbo)
+                , m_indexCount(indexCount) {
         }
 
         [[nodiscard]] inline constexpr GLuint
@@ -33,14 +35,19 @@ namespace gle {
             return m_ebo;
         }
 
-        [[nodiscard]] inline constexpr GLuint
-        vao() const noexcept {
-            return m_vao;
+        [[nodiscard]] inline constexpr GLsizei
+        indexCount() const noexcept {
+            return m_indexCount;
         }
 
         [[nodiscard]] inline constexpr GLuint
         tbo() const noexcept {
             return m_tbo;
+        }
+
+        [[nodiscard]] inline constexpr GLuint
+        vao() const noexcept {
+            return m_vao;
         }
 
         [[nodiscard]] inline constexpr GLuint
