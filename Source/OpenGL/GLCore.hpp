@@ -65,6 +65,9 @@ namespace gle {
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
 
+        [[nodiscard]] resources::ModelGeometryDescriptor *
+        loadGLTFModelGeometry(std::string_view fileName) noexcept override;
+
         void
         renderEntities() noexcept override;
 

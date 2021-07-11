@@ -10,6 +10,7 @@ add_library(OpenGLAPIEngine OBJECT
         DebugMessenger.cpp
         GLCore.cpp
         GraphicsHandle.hpp
+        GLTFLoader.cpp
         Resources/Shader.cpp
         Resources/ShaderProgram.cpp
         Resources/Uniform.cpp

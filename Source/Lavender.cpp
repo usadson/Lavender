@@ -42,24 +42,47 @@ Lavender::run() {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
 
-    auto *geometry = m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
-        .indices {
-            0, 1, 2,
-            2, 3, 0
-        },
-        .textureCoordinates {
-            0.0f, 0.0f,
-            1.0f, 0.0f,
-            1.0f, 1.0f,
-            0.0f, 1.0f
-        },
-        .vertices {
-            -0.5f,  0.5f, 0.0f,
-             0.5f,  0.5f, 0.0f,
-             0.5f, -0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-        },
-    });
+//    auto *geometry = m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
+//        .indices {
+//            0, 5, 10,
+//            0, 10, 2,
+//            3, 2, 8,
+//            3, 8, 12,
+//            13, 9, 4,
+//            13, 4, 7,
+//        },
+//        .textureCoordinates {
+//            1, 0, 0, 1,
+//            0, 1, 0, 1,
+//            1, 1, 0, 1,
+//            1, 1, 1, 1,
+//            1, 0, 0, 1,
+//            1, 0, 1, 1,
+//            0, 0, 1, 1,
+//        },
+//        .vertices {
+//             1,  1, -1,
+//             1, -1, -1,
+//             1,  1,  1,
+//             1, -1,  1,
+//            -1,  1, -1,
+//            -1,  1, -1,
+//            -1, -1, -1,
+//            -1, -1, -1,
+//            -1,  1,  1,
+//            -1,  1,  1,
+//            -1,  1,  1,
+//            -1, -1,  1,
+//            -1, -1,  1,
+//            -1, -1,  1,
+//        },
+//    });
+
+    auto *geometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Cube.gltf");
+    if (geometry == nullptr) {
+        std::printf("[Lavender] Failed to load Cube.gltf model!\n");
+        return base::ExitStatus::FAILED_LOADING_MODEL;
+    }
 
     auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
         "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
@@ -72,6 +95,7 @@ Lavender::run() {
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
     m_mainEntity = m_entityList.create(model);
+    m_mainEntity->transformation().scaling = {0.5f, 0.5f, 0.5f};
 
     float temp = 0;
     std::uint16_t frameCount{0};
