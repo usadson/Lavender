@@ -14,20 +14,28 @@ namespace gle {
 
     class ModelGeometryDescriptor
             : public resources::ModelGeometryDescriptor {
+        /**
+         * Note: array buffers (vbo, tbo, etc.) may share memory. Do not
+         * blindly call glDeleteBuffers on all of them.
+         */
+
         GLuint m_vao{};
         GLuint m_vbo{};
         GLuint m_ebo{};
         GLuint m_tbo{};
         GLsizei m_indexCount{};
 
+        GLenum m_indexType{};
+
     public:
         [[nodiscard]] inline constexpr
-        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLsizei indexCount) noexcept
+        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLsizei indexCount, GLenum indexType) noexcept
                 : m_vao(vao)
                 , m_vbo(vbo)
                 , m_ebo(ebo)
                 , m_tbo(tbo)
-                , m_indexCount(indexCount) {
+                , m_indexCount(indexCount)
+                , m_indexType(indexType) {
         }
 
         [[nodiscard]] inline constexpr GLuint
@@ -38,6 +46,11 @@ namespace gle {
         [[nodiscard]] inline constexpr GLsizei
         indexCount() const noexcept {
             return m_indexCount;
+        }
+
+        [[nodiscard]] inline constexpr GLenum
+        indexType() const noexcept {
+            return m_indexType;
         }
 
         [[nodiscard]] inline constexpr GLuint

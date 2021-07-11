@@ -78,7 +78,7 @@ namespace gle {
         glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
         glBindVertexArray(0);
-        return &m_geometryDescriptors.emplace_back(vao, vbo.value(), ebo.value(), tbo.value(), std::size(geometry.indices));
+        return &m_geometryDescriptors.emplace_back(vao, vbo.value(), ebo.value(), tbo.value(), std::size(geometry.indices), GL_UNSIGNED_INT);
     }
 
     std::optional<unsigned int>
@@ -226,7 +226,7 @@ namespace gle {
             const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity.modelDescriptor()->geometryDescriptor());
             glBindVertexArray(geometry->vao());
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
-            glDrawElements(GL_TRIANGLES, geometry->indexCount(), GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);
         }
 
 //        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
