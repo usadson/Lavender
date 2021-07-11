@@ -29,6 +29,17 @@ namespace window {
         }
     }
 
+    static void
+    resizeCallback(GLFWwindow *window, int width, int height) noexcept {
+        assert(width > 0);
+        assert(height > 0);
+
+        auto *graphicsAPI = reinterpret_cast<GLFWCore *>(glfwGetWindowUserPointer(window))->graphicsAPI();
+        if (graphicsAPI) {
+            graphicsAPI->onResize({static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height)});
+        }
+    }
+
     [[nodiscard]] inline constexpr int
     convertGraphicsAPINameToGLFWEnum(GraphicsAPI::Name name) noexcept {
         switch (name) {
@@ -48,7 +59,7 @@ namespace window {
         }
 
         glfwWindowHint(GLFW_CLIENT_API, convertGraphicsAPINameToGLFWEnum(graphicsAPI));
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         if (graphicsAPI == GraphicsAPI::Name::OPENGL) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -65,7 +76,10 @@ namespace window {
 #endif
         }
 
+        glfwSetWindowUserPointer(m_window, this);
+
         glfwSetKeyCallback(m_window, reinterpret_cast<GLFWkeyfun>(&keyboardCallback));
+        glfwSetFramebufferSizeCallback(m_window, &resizeCallback);
 
         return true;
     }

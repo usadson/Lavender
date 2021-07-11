@@ -6,8 +6,13 @@
 
 #pragma once
 
+#include <functional>
+
+#include <cstdint>
+
 #include "Source/Base/ArrayView.hpp"
 #include "Source/GraphicsAPI.hpp"
+#include "Source/Math/Size2D.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/Utils/Version.hpp"
 
@@ -16,6 +21,8 @@
 #endif
 
 class WindowAPI {
+    GraphicsAPI *m_graphicsAPI{nullptr};
+
 public:
     [[nodiscard]] virtual bool
     initialize(GraphicsAPI::Name graphicsAPI) = 0;
@@ -33,11 +40,21 @@ public:
         vk::SurfaceKHR *surfaceDestination) noexcept = 0;
 #endif
 
+    [[nodiscard]] inline constexpr GraphicsAPI *
+    graphicsAPI() noexcept {
+        return m_graphicsAPI;
+    }
+
     [[nodiscard]] virtual math::Vector2u
     queryFramebufferSize() const noexcept = 0;
 
     [[nodiscard]] virtual utils::Version<int>
     queryGLContextVersion() const noexcept = 0;
+
+    virtual inline void
+    registerGraphicsAPI(GraphicsAPI *graphicsAPI) noexcept {
+        m_graphicsAPI = graphicsAPI;
+    }
 
     virtual void
     requestVSyncMode(bool enabled) noexcept = 0;
