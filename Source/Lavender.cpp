@@ -14,7 +14,12 @@
 
 void
 Lavender::update(float deltaTime) noexcept {
-    m_mainEntity->transformation().scaling = math::Vector<float, 3>{deltaTime * 1000, deltaTime * 1000, deltaTime * 1000};
+    static float rot = 0;
+    rot += deltaTime;
+
+//    m_mainEntity->transformation().rotation = {rot * 10, 0.0f, 0.0f};
+    m_mainEntity->transformation().rotation = {rot * 10, rot * 10, 0.0f};
+//    m_mainEntity->transformation().rotation = {0.0f, 0.0f, rot * 10};
 }
 
 void
@@ -36,47 +41,12 @@ Lavender::run() {
     auto glVersion = m_windowAPI->queryGLContextVersion();
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
-//	m_graphicsAPI = std::make_unique<vke::Core>();
     m_graphicsAPI = std::make_unique<gle::Core>(&m_entityList);
     if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
 
-//    auto *geometry = m_graphicsAPI->createModelGeometry(resources::ModelGeometry{
-//        .indices {
-//            0, 5, 10,
-//            0, 10, 2,
-//            3, 2, 8,
-//            3, 8, 12,
-//            13, 9, 4,
-//            13, 4, 7,
-//        },
-//        .textureCoordinates {
-//            1, 0, 0, 1,
-//            0, 1, 0, 1,
-//            1, 1, 0, 1,
-//            1, 1, 1, 1,
-//            1, 0, 0, 1,
-//            1, 0, 1, 1,
-//            0, 0, 1, 1,
-//        },
-//        .vertices {
-//             1,  1, -1,
-//             1, -1, -1,
-//             1,  1,  1,
-//             1, -1,  1,
-//            -1,  1, -1,
-//            -1,  1, -1,
-//            -1, -1, -1,
-//            -1, -1, -1,
-//            -1,  1,  1,
-//            -1,  1,  1,
-//            -1,  1,  1,
-//            -1, -1,  1,
-//            -1, -1,  1,
-//            -1, -1,  1,
-//        },
-//    });
+    m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
 
     auto *geometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Cube.gltf");
     if (geometry == nullptr) {
@@ -95,6 +65,7 @@ Lavender::run() {
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
     m_mainEntity = m_entityList.create(model);
+    m_mainEntity->transformation().translation = {0.0f, 0.0f, 2.0f};
     m_mainEntity->transformation().scaling = {0.5f, 0.5f, 0.5f};
 
     float temp = 0;
