@@ -31,7 +31,7 @@ namespace math {
             return m_data[x];
         }
 
-        [[nodiscard]] inline constexpr Matrix4x4 &
+        inline constexpr Matrix4x4 &
         identity() noexcept {
             m_data = std::array<std::array<Type, 4>, 4>{{
                 {1, 0, 0, 0},
@@ -42,7 +42,7 @@ namespace math {
             return *this;
         }
 
-        [[nodiscard]] inline constexpr Matrix4x4 &
+        inline constexpr Matrix4x4 &
         translate(const Vector<Type, 3> &vector) noexcept {
             m_data = std::array<std::array<Type, 4>, 4>{{
                 {1, 0, 0, vector.x()},
@@ -53,7 +53,7 @@ namespace math {
             return *this;
         }
 
-        [[nodiscard]] inline constexpr Matrix4x4 &
+        inline constexpr Matrix4x4 &
         rotate(const Vector<Type, 3> &vector) noexcept {
             Matrix4x4<Type> rx, ry, rz;
 
@@ -86,7 +86,7 @@ namespace math {
             return *this;
         }
 
-        [[nodiscard]] inline constexpr Matrix4x4 &
+        inline constexpr Matrix4x4 &
         scale(const Vector<Type, 3> &vector) noexcept {
             m_data = std::array<std::array<Type, 4>, 4>{{
                 {vector.x(), 0,          0,          0},
@@ -113,5 +113,8 @@ namespace math {
             return result;
         }
     };
+
+    [[nodiscard]] Matrix4x4<float>
+    createPerspectiveProjectionMatrix(float fov, float width, float height, float zNear, float zFar) noexcept;
 
 } // namespace math
