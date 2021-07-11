@@ -18,6 +18,8 @@
 #include "Source/Resources/TextureDescriptor.hpp"
 #include "Source/Resources/TextureInput.hpp"
 
+#include <string_view>
+
 class WindowAPI;
 
 class GraphicsAPI {
@@ -47,6 +49,12 @@ public:
 
     [[nodiscard]] virtual bool
     initialize(WindowAPI *) = 0;
+
+    [[nodiscard]] virtual inline resources::ModelGeometryDescriptor *
+    loadGLTFModelGeometry(std::string_view fileName) noexcept {
+        static_cast<void>(fileName);
+        return nullptr;
+    }
 
     virtual void
     renderEntities() = 0;
