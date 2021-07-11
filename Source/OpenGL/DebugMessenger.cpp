@@ -71,6 +71,7 @@ namespace gle {
             stream << "       Source: " << DebugMessenger::translateSource(source) << '\n';
             stream << "       ID: " << id << '\n';
             stream << "       Message: \"" << std::string_view(message, static_cast<std::size_t>(length)) << "\"\n";
+            stream << std::flush;
         }
 
     } // namespace DebugMessenger
