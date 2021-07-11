@@ -24,11 +24,12 @@ namespace math {
         [[nodiscard]] Vector() = default;
         [[nodiscard]] Vector(Vector &&) = default;
         [[nodiscard]] Vector(const Vector &) = default;
-        [[nodiscard]] Vector &operator=(Vector &&) = default;
-        [[nodiscard]] Vector &operator=(const Vector &) = default;
+        Vector &operator=(Vector &&) = default;
+        Vector &operator=(const Vector &) = default;
 
         template <typename... CType>
-        [[nodiscard]] Vector(CType... values) noexcept
+        [[nodiscard]] inline constexpr
+        Vector(CType... values) noexcept
             : m_data{(values)...} {
         }
 
@@ -118,7 +119,7 @@ namespace math {
             return result;
         }
 
-        [[nodiscard]] inline Type
+        [[nodiscard]] inline Vector<Type, 3>
         cross(const Vector<Type, 3> &other) const noexcept
                 requires(Dimensions == 3) {
             const auto cx = y() * other.z() - z() * other.y();
