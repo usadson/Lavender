@@ -30,9 +30,10 @@ constexpr std::string_view g_vertexShaderCode = R"(
     out vec2 fragment_textureCoordinates;
 
     uniform mat4 u_transform;
+    uniform mat4 u_projection;
 
     void main() {
-        gl_Position = u_transform * vec4(position, 1.0);
+        gl_Position = (u_projection * u_transform) * vec4(position, 1.0);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
@@ -146,9 +147,6 @@ namespace gle {
 
         DebugMessenger::setup();
 
-        const auto size = m_windowAPI->queryFramebufferSize();
-        glViewport(0, 0, static_cast<GLsizei>(size.x()), static_cast<GLsizei>(size.y()));
-
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -185,6 +183,12 @@ namespace gle {
         glUniform1i(uniformLocation, 0); // texture bank 0
         m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
 
+        // TODO update when resolution changes.
+        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
+
+        const auto size = m_windowAPI->queryFramebufferSize();
+        onResize({size.x(), size.y()});
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         glFrontFace(GL_CW);
@@ -209,6 +213,14 @@ namespace gle {
         }
 
         return true;
+    }
+
+    void
+    Core::onResize(math::Size2D<std::uint32_t> size) noexcept {
+        glViewport(0, 0, static_cast<GLsizei>(size.width()), static_cast<GLsizei>(size.height()));
+
+        m_uniformProjection.store(math::createPerspectiveProjectionMatrix(
+            70, static_cast<float>(size.width()), static_cast<float>(size.height()), 0.1f, 1000));
     }
 
     void

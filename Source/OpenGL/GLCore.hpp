@@ -15,7 +15,10 @@
 #include <optional>
 #include <vector>
 
+#include <cstdint>
+
 #include "Source/GraphicsAPI.hpp"
+#include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
 #include "Source/OpenGL/Resources/ShaderProgram.hpp"
 #include "Source/OpenGL/Resources/Uniform.hpp"
@@ -37,6 +40,7 @@ namespace gle {
         GLuint m_shaderAttribTextureCoordinates{};
 
         UniformMatrix4 m_uniformTransformation{-1};
+        UniformMatrix4 m_uniformProjection{-1};
 
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
@@ -67,6 +71,14 @@ namespace gle {
 
         [[nodiscard]] resources::ModelGeometryDescriptor *
         loadGLTFModelGeometry(std::string_view fileName) noexcept override;
+
+        /**
+         * Is called to initialize things that depend on the window size.
+         *
+         * TODO: Should be called when the window resizes.
+         */
+        void
+        onResize(math::Size2D<std::uint32_t>) noexcept;
 
         void
         renderEntities() noexcept override;
