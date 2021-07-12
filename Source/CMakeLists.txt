@@ -6,6 +6,7 @@ add_library(LavenderCore OBJECT
             GraphicsAPI.hpp
             Lavender.cpp
             Lavender.hpp
+            Interface/FreeCamera.cpp
             Math/Matrix4x4.cpp
 )
 
