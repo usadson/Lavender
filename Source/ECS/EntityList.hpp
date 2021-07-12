@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include <cassert>
@@ -17,7 +18,7 @@
 namespace ecs {
 
     class EntityList {
-        std::vector<Entity> m_entities;
+        std::vector<std::unique_ptr<Entity>> m_entities;
 
         /**
          * Useful for Graphics APIs that need to rebuild / repack the entity
@@ -27,28 +28,30 @@ namespace ecs {
 
     public:
         inline Entity *
-        add(Entity &&entity) noexcept {
+        add(std::unique_ptr<Entity> &&entity) noexcept {
             m_entities.push_back(std::move(entity));
             ++m_updateCount;
-            return &m_entities.back();
+            return m_entities.back().get();
         }
 
         template<typename...Args>
         inline Entity *
         create(Args &&...args) noexcept {
+            m_entities.push_back(std::make_unique<Entity>(args...));
             ++m_updateCount;
-            return &m_entities.emplace_back(args...);
+            return m_entities.back().get();
         }
 
-        [[nodiscard]] inline const std::vector<Entity> &
+        [[nodiscard]] inline const std::vector<std::unique_ptr<Entity>> &
         data() const noexcept {
             return m_entities;
         }
 
         inline void
         remove(Entity *entity) noexcept {
-            auto it = std::find_if(std::begin(m_entities), std::end(m_entities), [entity] (const Entity &vEntity) {
-                return &vEntity == entity;
+            auto it = std::find_if(std::begin(m_entities), std::end(m_entities),
+                                  [entity] (const std::unique_ptr<Entity> &vEntity) {
+                return vEntity.get() == entity;
             });
 
             assert(it != std::end(m_entities));
