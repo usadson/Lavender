@@ -10,12 +10,17 @@
 
 #include "Source/Base/ExitStatus.hpp"
 #include "Source/ECS/EntityList.hpp"
+#include "Source/Input/Controller.hpp"
+#include "Source/Interface/FreeCamera.hpp"
 #include "Source/Window/WindowAPI.hpp"
 #include "Source/GraphicsAPI.hpp"
 
 class Lavender {
     std::unique_ptr<GraphicsAPI> m_graphicsAPI{nullptr};
     std::unique_ptr<WindowAPI> m_windowAPI{ nullptr };
+
+    input::Controller m_controller{};
+    interface::FreeCamera *m_camera{};
 
     ecs::EntityList m_entityList{};
     ecs::Entity *m_mainEntity{nullptr};

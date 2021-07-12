@@ -31,6 +31,8 @@ base::ExitStatus
 Lavender::run() {
     auto previousFrameTime = std::chrono::steady_clock::now();
 
+    m_camera = static_cast<interface::FreeCamera *>(m_entityList.add(std::make_unique<interface::FreeCamera>(&m_controller)));
+
     m_windowAPI = std::make_unique<window::GLFWCore>();
     if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
         return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
