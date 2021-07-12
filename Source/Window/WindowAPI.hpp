@@ -12,6 +12,7 @@
 
 #include "Source/Base/ArrayView.hpp"
 #include "Source/GraphicsAPI.hpp"
+#include "Source/Input/KeyboardUpdate.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/Utils/Version.hpp"
@@ -21,7 +22,12 @@
 #endif
 
 class WindowAPI {
+public:
+    using KeyboardCallbackType = std::function<void(input::KeyboardUpdate)>;
+
+private:
     GraphicsAPI *m_graphicsAPI{nullptr};
+    KeyboardCallbackType m_keyboardCallback{};
 
 public:
     [[nodiscard]] virtual bool
@@ -45,6 +51,11 @@ public:
         return m_graphicsAPI;
     }
 
+    [[nodiscard]] inline constexpr const KeyboardCallbackType &
+    keyboardCallback() const noexcept {
+        return m_keyboardCallback;
+    }
+
     [[nodiscard]] virtual math::Vector2u
     queryFramebufferSize() const noexcept = 0;
 
@@ -54,6 +65,11 @@ public:
     virtual inline void
     registerGraphicsAPI(GraphicsAPI *graphicsAPI) noexcept {
         m_graphicsAPI = graphicsAPI;
+    }
+
+    virtual inline void
+    registerKeyboardCallback(KeyboardCallbackType &&callback) noexcept {
+        m_keyboardCallback = std::move(callback);
     }
 
     virtual void

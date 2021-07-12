@@ -19,14 +19,55 @@
 
 namespace window {
 
+    [[nodiscard]] inline static constexpr input::KeyboardKey
+    translateGLFWKeyToInputKeyboardKey(int key) noexcept {
+        switch (key) {
+            case GLFW_KEY_W: return input::KeyboardKey::W;
+            case GLFW_KEY_A: return input::KeyboardKey::A;
+            case GLFW_KEY_S: return input::KeyboardKey::S;
+            case GLFW_KEY_D: return input::KeyboardKey::D;
+            case GLFW_KEY_LEFT_SHIFT: return input::KeyboardKey::LEFT_SHIFT;
+            case GLFW_KEY_LEFT_CONTROL: return input::KeyboardKey::LEFT_CONTROL;
+            case GLFW_KEY_SPACE: return input::KeyboardKey::SPACE;
+            default: return input::KeyboardKey::INVALID_KEY;
+        }
+    }
+
+    [[nodiscard]] inline static constexpr input::KeyboardAction
+    translateGLFWActionToKeyboardAction(int action) noexcept {
+        switch (action) {
+        case GLFW_PRESS: return input::KeyboardAction::PRESS;
+        case GLFW_RELEASE: return input::KeyboardAction::RELEASE;
+        case GLFW_REPEAT: return input::KeyboardAction::REPEAT;
+        default:
+            assert(false);
+            return input::KeyboardAction::INVALID;
+        }
+    }
+
+    /**
+     * action is one of:
+     *   GLFW_PRESS, GLFW_RELEASE or GLFW_REPEAT
+     */
     static void
-    keyboardCallback(GLFWwindow *window, int key, int scanCode, int action, int mods) noexcept {
+    keyboardCallbackGLFW(GLFWwindow *window, int key, int scanCode, int action, int mods) noexcept {
         static_cast<void>(scanCode);
         static_cast<void>(mods);
 
         if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+
+        const auto inputKey = translateGLFWKeyToInputKeyboardKey(key);
+        const auto inputAction = translateGLFWActionToKeyboardAction(action);
+        if (inputKey == input::KeyboardKey::INVALID_KEY || inputAction == input::KeyboardAction::INVALID)
+            return;
+
+        auto *core = reinterpret_cast<GLFWCore *>(glfwGetWindowUserPointer(window));
+        if (core == nullptr || !core->keyboardCallback())
+            return;
+
+        core->keyboardCallback()(input::KeyboardUpdate{inputKey, inputAction});
     }
 
     static void
@@ -78,7 +119,7 @@ namespace window {
 
         glfwSetWindowUserPointer(m_window, this);
 
-        glfwSetKeyCallback(m_window, reinterpret_cast<GLFWkeyfun>(&keyboardCallback));
+        glfwSetKeyCallback(m_window, reinterpret_cast<GLFWkeyfun>(&keyboardCallbackGLFW));
         glfwSetFramebufferSizeCallback(m_window, &resizeCallback);
 
         return true;
