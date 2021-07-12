@@ -43,25 +43,26 @@ Lavender::run() {
     }
 
     m_windowAPI->requestVSyncMode(false);
+    setupController();
 
     auto glVersion = m_windowAPI->queryGLContextVersion();
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
-    m_graphicsAPI = std::make_unique<gle::Core>(&m_entityList);
+    m_graphicsAPI = std::make_unique<gle::Core>(&m_entityList, &m_controller, m_camera);
     if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
 
     m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
 
-    auto *geometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Cube.gltf");
+    auto *geometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Dispatcher.gltf");
     if (geometry == nullptr) {
-        std::printf("[Lavender] Failed to load Cube.gltf model!\n");
+        std::printf("[Lavender] Failed to load Dispatcher.gltf model!\n");
         return base::ExitStatus::FAILED_LOADING_MODEL;
     }
 
     auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
-        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
+        "Resources/Assets/Textures/Dispatcher_Orange.png",
         true
     });
 
@@ -98,4 +99,22 @@ Lavender::run() {
     }
 
     return base::ExitStatus::SUCCESS;
+}
+
+void Lavender::setupController() noexcept {
+    m_windowAPI->registerKeyboardCallback([&](input::KeyboardUpdate update) {
+        switch (update.key) {
+#define LAVENDER_MAP_KEY(key, entry) \
+        case input::KeyboardKey::key: \
+            m_controller.entry = update.action != input::KeyboardAction::RELEASE; \
+            break;
+            LAVENDER_MAP_KEY(W, moveForward)
+            LAVENDER_MAP_KEY(S, moveBackward)
+            LAVENDER_MAP_KEY(A, moveLeft)
+            LAVENDER_MAP_KEY(D, moveRight)
+            LAVENDER_MAP_KEY(SPACE, moveUp)
+            LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
+        default: break;
+        }
+    });
 }

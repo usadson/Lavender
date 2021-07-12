@@ -29,6 +29,9 @@ class Lavender {
     render() noexcept;
 
     void
+    setupController() noexcept;
+
+    void
     update(float deltaTime) noexcept;
 
 public:
