@@ -18,8 +18,12 @@ Lavender::update(float deltaTime) noexcept {
     rot += deltaTime;
 
 //    m_mainEntity->transformation().rotation = {rot * 10, 0.0f, 0.0f};
-    m_mainEntity->transformation().rotation = {rot * 10, rot * 10, 0.0f};
+    m_mainEntity->transformation().rotation = {0.0f, rot * 10, 0.0f};
 //    m_mainEntity->transformation().rotation = {0.0f, 0.0f, rot * 10};
+
+    for (auto &entity : std::data(m_entityList)) {
+        entity->onUpdate(deltaTime);
+    }
 }
 
 void
