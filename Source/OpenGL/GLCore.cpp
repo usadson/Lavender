@@ -18,6 +18,7 @@
 #include <GL/glew.h>
 
 #include "Source/ECS/EntityList.hpp"
+#include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
@@ -31,9 +32,10 @@ constexpr std::string_view g_vertexShaderCode = R"(
 
     uniform mat4 u_transform;
     uniform mat4 u_projection;
+    uniform mat4 u_view;
 
     void main() {
-        gl_Position = (u_projection * u_transform) * vec4(position, 1.0);
+        gl_Position = (u_projection * u_view * u_transform) * vec4(position, 1.0);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
@@ -182,6 +184,7 @@ namespace gle {
         auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
         glUniform1i(uniformLocation, 0); // texture bank 0
         m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
+        m_uniformView = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_view"));
 
         // TODO update when resolution changes.
         m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
@@ -229,7 +232,13 @@ namespace gle {
 
         glUseProgram(m_shaderProgram->programID());
 
-        for (const auto &entity : m_entityList->data()) {
+        m_uniformView.store(m_camera->viewMatrix());
+
+        for (const auto &entityPtr : m_entityList->data()) {
+            const auto &entity = *entityPtr;
+            if (entity.modelDescriptor() == nullptr)
+                continue;
+
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(entity.modelDescriptor()->albedoTextureDescriptor())->textureID());
 

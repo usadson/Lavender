@@ -41,6 +41,7 @@ namespace gle {
 
         UniformMatrix4 m_uniformTransformation{-1};
         UniformMatrix4 m_uniformProjection{-1};
+        UniformMatrix4 m_uniformView{-1};
 
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
@@ -56,8 +57,10 @@ namespace gle {
 
     public:
         [[nodiscard]] inline explicit
-        Core(const ecs::EntityList *entityList) noexcept
-                : GraphicsAPI(entityList) {
+        Core(const ecs::EntityList *entityList,
+             const input::Controller *controller,
+             const interface::Camera *camera) noexcept
+                : GraphicsAPI(entityList, controller, camera) {
         }
 
         [[nodiscard]] resources::ModelGeometryDescriptor *
