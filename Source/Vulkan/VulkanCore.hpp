@@ -151,8 +151,10 @@ namespace vke {
 
     public:
         [[nodiscard]] inline explicit
-        Core(const ecs::EntityList *entityList) noexcept
-                : GraphicsAPI(entityList) {
+        Core(const ecs::EntityList *entityList,
+             const input::Controller *controller,
+             const interface::Camera *camera) noexcept
+                : GraphicsAPI(entityList, controller, camera) {
         }
 
         [[nodiscard]] bool

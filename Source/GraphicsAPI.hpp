@@ -16,6 +16,8 @@
 
 #include "Source/ECS/EntityList.hpp"
 #include "Source/Math/Size2D.hpp"
+#include "Source/Input/Forward.hpp"
+#include "Source/Interface/Forward.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
 #include "Source/Resources/TextureDescriptor.hpp"
@@ -28,16 +30,33 @@ class WindowAPI;
 class GraphicsAPI {
 protected:
     const ecs::EntityList *m_entityList;
+
+    const input::Controller *m_controller;
+    const interface::Camera *m_camera;
 public:
     [[nodiscard]] inline constexpr explicit
-    GraphicsAPI(const ecs::EntityList *entityList) noexcept
-            : m_entityList(entityList) {
+    GraphicsAPI(const ecs::EntityList *entityList,
+                const input::Controller *controller,
+                const interface::Camera *camera) noexcept
+            : m_entityList(entityList)
+            , m_controller(controller)
+            , m_camera(camera) {
     }
 
     enum class Name {
         OPENGL,
         VULKAN,
     };
+
+    [[nodiscard]] inline const interface::Camera *
+    camera() const noexcept {
+        return m_camera;
+    }
+
+    [[nodiscard]] inline const input::Controller *
+    controller() const noexcept {
+        return m_controller;
+    }
 
     [[nodiscard]] virtual resources::ModelGeometryDescriptor *
     createModelGeometry(const resources::ModelGeometry &geometry) noexcept = 0;
