@@ -23,6 +23,17 @@ namespace ecs {
                 , m_transformation(transformation) {
         }
 
+        virtual
+        ~Entity() noexcept = default;
+
+        virtual void
+        onUpdate(float deltaTime) noexcept {
+            static_cast<void>(deltaTime);
+        }
+
+        /**
+         * Not all entities have models, so this can be null!
+         */
         [[nodiscard]] inline const resources::ModelDescriptor *
         modelDescriptor() const noexcept {
             return m_modelDescriptor;
