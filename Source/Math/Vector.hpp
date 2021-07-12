@@ -33,6 +33,28 @@ namespace math {
             : m_data{(values)...} {
         }
 
+        [[nodiscard]] inline constexpr Type &
+        x() noexcept {
+            return m_data[0];
+        }
+
+        [[nodiscard]] inline constexpr Type &
+        y() noexcept {
+            return m_data[1];
+        }
+
+        [[nodiscard]] inline constexpr Type &
+        z() noexcept
+        requires(Dimensions >= 3) {
+            return m_data[2];
+        }
+
+        [[nodiscard]] inline constexpr Type &
+        w() noexcept
+        requires(Dimensions >= 4) {
+            return m_data[3];
+        }
+
         [[nodiscard]] inline constexpr Type
         x() const noexcept {
             return m_data[0];
