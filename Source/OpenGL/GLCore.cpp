@@ -261,10 +261,10 @@ namespace gle {
             printf("[GL] Core: Error: %u\n", err);
     }
 
-    resources::ModelDescriptor *
+    const resources::ModelDescriptor *
     Core::uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept {
-        m_modelDescriptors.push_back(std::move(modelDescriptor));
-        return &m_modelDescriptors.back();
+        m_modelDescriptors.push_back(std::make_unique<resources::ModelDescriptor>(std::forward<resources::ModelDescriptor>(modelDescriptor)));
+        return m_modelDescriptors.back().get();
     }
 
 } // namespace gle

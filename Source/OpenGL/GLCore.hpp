@@ -33,7 +33,7 @@ namespace gle {
 
         std::vector<ModelGeometryDescriptor> m_geometryDescriptors{};
         std::vector<TextureDescriptor> m_textureDescriptors{};
-        std::vector<resources::ModelDescriptor> m_modelDescriptors{};
+        std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
 
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
@@ -86,7 +86,7 @@ namespace gle {
         void
         renderEntities() noexcept override;
 
-        [[nodiscard]] resources::ModelDescriptor *
+        [[nodiscard]] const resources::ModelDescriptor *
         uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept override;
     };
 

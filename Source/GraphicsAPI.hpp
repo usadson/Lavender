@@ -84,7 +84,18 @@ public:
     virtual void
     renderEntities() = 0;
 
-    [[nodiscard]] virtual resources::ModelDescriptor *
+    /**
+     * Returns an immutable reference to the descriptor.
+     *
+     * It isn't up to the application to modify this value, as it should be
+     * communicated with the graphics API whether or not to allocate resources
+     * for it.
+     *
+     * If this descriptor is to be modified after a call to
+     * uploadModelDescriptor, there should be another subroutine in GraphicsAPI
+     * to do so.
+     */
+    [[nodiscard]] virtual const resources::ModelDescriptor *
     uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept = 0;
 
     virtual ~GraphicsAPI() noexcept = default;

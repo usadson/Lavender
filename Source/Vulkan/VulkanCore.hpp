@@ -209,7 +209,7 @@ namespace vke {
             return m_swapChain;
         }
 
-        [[nodiscard]] inline resources::ModelDescriptor *
+        [[nodiscard]] inline const resources::ModelDescriptor *
         uploadModelDescriptor(resources::ModelDescriptor &&) noexcept override {
             return {};
         }
