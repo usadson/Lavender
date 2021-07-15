@@ -24,6 +24,8 @@ Lavender::update(float deltaTime) noexcept {
     for (auto &entity : std::data(m_entityList)) {
         entity->onUpdate(deltaTime);
     }
+
+    m_controller.rotateYaw = 0;
 }
 
 void
@@ -116,5 +118,12 @@ void Lavender::setupController() noexcept {
             LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
         default: break;
         }
+    });
+    m_windowAPI->registerMouseCallback([&](input::MouseUpdate update) {
+        if (update.button != input::MouseButton::NONE)
+            return;
+
+        m_controller.rotatePitch -= update.moveX;
+        m_controller.rotateYaw -= update.moveY;
     });
 }

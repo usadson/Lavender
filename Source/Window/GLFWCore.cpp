@@ -45,10 +45,6 @@ namespace window {
         }
     }
 
-    /**
-     * action is one of:
-     *   GLFW_PRESS, GLFW_RELEASE or GLFW_REPEAT
-     */
     static void
     keyboardCallbackGLFW(GLFWwindow *window, int key, int scanCode, int action, int mods) noexcept {
         static_cast<void>(scanCode);
@@ -68,6 +64,60 @@ namespace window {
             return;
 
         core->keyboardCallback()(input::KeyboardUpdate{inputKey, inputAction});
+    }
+
+    static void
+    mouseButtonCallbackGLFW(GLFWwindow *window, int button, int action, int mods) noexcept {
+        auto *core = reinterpret_cast<GLFWCore *>(glfwGetWindowUserPointer(window));
+        if (core == nullptr || !core->mouseCallback())
+            return;
+
+        static_cast<void>(mods);
+
+        if (core->mouseGrabbed()) {
+            if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+                core->setMouseGrabbed(false);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                return;
+            }
+
+            switch (button) {
+            case GLFW_MOUSE_BUTTON_LEFT:
+                core->mouseCallback()({input::MouseButton::LEFT, action == GLFW_PRESS});
+                break;
+            case GLFW_MOUSE_BUTTON_MIDDLE:
+                core->mouseCallback()({input::MouseButton::MIDDLE, action == GLFW_PRESS});
+                break;
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                core->mouseCallback()({input::MouseButton::RIGHT, action == GLFW_PRESS});
+                break;
+            default:
+                break;
+            }
+        } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            core->setMouseGrabbed(true);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+    }
+
+    static void
+    mousePositionCallbackGLFW(GLFWwindow *window, double posX, double posY) noexcept {
+        auto *core = reinterpret_cast<GLFWCore *>(glfwGetWindowUserPointer(window));
+        if (core == nullptr || !core->mouseGrabbed() || !core->mouseCallback())
+            return;
+
+        int middleX, middleY;
+        glfwGetWindowSize(window, &middleX, &middleY);
+
+        middleX /= 2;
+        middleY /= 2;
+
+        const double deltaX = middleX - posX;
+        const double deltaY = middleY - posY;
+
+        core->mouseCallback()({input::MouseButton::NONE, false, static_cast<float>(deltaX), static_cast<float>(deltaY)});
+
+        glfwSetCursorPos(window, middleX, middleY);
     }
 
     static void
@@ -120,6 +170,8 @@ namespace window {
         glfwSetWindowUserPointer(m_window, this);
 
         glfwSetKeyCallback(m_window, reinterpret_cast<GLFWkeyfun>(&keyboardCallbackGLFW));
+        glfwSetMouseButtonCallback(m_window, reinterpret_cast<GLFWmousebuttonfun>(&mouseButtonCallbackGLFW));
+        glfwSetCursorPosCallback(m_window, reinterpret_cast<GLFWcursorposfun>(&mousePositionCallbackGLFW));
         glfwSetFramebufferSizeCallback(m_window, &resizeCallback);
 
         return true;

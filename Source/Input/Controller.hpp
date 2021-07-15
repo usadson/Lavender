@@ -12,12 +12,17 @@
 namespace input {
 
     struct Controller {
+        float mouseSensitivity{0.02f};
+
         bool moveLeft{};
         bool moveRight{};
         bool moveForward{};
         bool moveBackward{};
         bool moveUp{};
         bool moveDown{};
+
+        float rotatePitch{};
+        float rotateYaw{};
     };
 
 } // namespace input

@@ -13,6 +13,7 @@
 #include "Source/Base/ArrayView.hpp"
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Input/KeyboardUpdate.hpp"
+#include "Source/Input/MouseUpdate.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/Utils/Version.hpp"
@@ -24,10 +25,15 @@
 class WindowAPI {
 public:
     using KeyboardCallbackType = std::function<void(input::KeyboardUpdate)>;
+    using MouseCallbackType = std::function<void(input::MouseUpdate)>;
 
 private:
     GraphicsAPI *m_graphicsAPI{nullptr};
     KeyboardCallbackType m_keyboardCallback{};
+    MouseCallbackType m_mouseCallback{};
+
+protected:
+    bool m_mouseGrabbed{false};
 
 public:
     [[nodiscard]] virtual bool
@@ -56,6 +62,16 @@ public:
         return m_keyboardCallback;
     }
 
+    [[nodiscard]] inline constexpr const MouseCallbackType &
+    mouseCallback() const noexcept {
+        return m_mouseCallback;
+    }
+
+    [[nodiscard]] inline constexpr bool
+    mouseGrabbed() const noexcept {
+        return m_mouseGrabbed;
+    }
+
     [[nodiscard]] virtual math::Vector2u
     queryFramebufferSize() const noexcept = 0;
 
@@ -72,8 +88,18 @@ public:
         m_keyboardCallback = std::move(callback);
     }
 
+    virtual inline void
+    registerMouseCallback(MouseCallbackType &&callback) noexcept {
+        m_mouseCallback = std::move(callback);
+    }
+
     virtual void
     requestVSyncMode(bool enabled) noexcept = 0;
+
+    inline void
+    setMouseGrabbed(bool grabbed) noexcept {
+        m_mouseGrabbed = grabbed;
+    }
 
     [[nodiscard]] virtual bool
     shouldClose() = 0;
