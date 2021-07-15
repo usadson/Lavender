@@ -4,8 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Source/Input/Controller.hpp"
 #include "Source/Interface/FreeCamera.hpp"
+
+#include "Source/Input/Controller.hpp"
 
 namespace interface {
 
@@ -19,33 +20,68 @@ namespace interface {
     }
 
     void
+    FreeCamera::rotatePitch(float angle) noexcept {
+        constexpr const math::Vector3f yAxis{0.0f, 1.0f, 0.0f};
+        auto hAxis = yAxis.cross(m_forward).normalize();
+
+        m_forward = rotateV3f(m_forward, angle, yAxis).normalize();
+
+        m_up = m_forward.cross(hAxis).normalize();
+    }
+
+    void
+    FreeCamera::rotateYaw(float angle) noexcept {
+        constexpr const math::Vector3f yAxis{0.0f, 1.0f, 0.0f};
+        auto hAxis = yAxis.cross(m_forward).normalize();
+
+        m_forward = rotateV3f(m_forward, angle, hAxis).normalize();
+
+        m_up = m_forward.cross(hAxis).normalize();
+    }
+
+    void
     FreeCamera::onUpdate(float deltaTime) noexcept {
         if (!m_controller)
             return;
 
-        const float moveX = resolveDirection(m_controller->moveRight, m_controller->moveLeft) * deltaTime;
-        const float moveY = resolveDirection(m_controller->moveUp, m_controller->moveDown) * deltaTime;
-        const float moveZ = resolveDirection(m_controller->moveForward, m_controller->moveBackward) * deltaTime;
+        const float moveHorizontal = resolveDirection(m_controller->moveRight, m_controller->moveLeft) * deltaTime;
+        transformation().translation.y() += resolveDirection(m_controller->moveUp, m_controller->moveDown) * deltaTime;
+        const float moveDepth = resolveDirection(m_controller->moveForward, m_controller->moveBackward) * deltaTime;
 
-        if (moveZ != 0) {
-            transformation().translation.x() += std::sin(math::toRadians(transformation().rotation.y())) * -1.0f * moveZ;
-            transformation().translation.z() += std::cos(math::toRadians(transformation().rotation.y())) * moveZ;
-        }
-        if (moveX != 0) {
-            transformation().translation.x() += std::sin(math::toRadians(transformation().rotation.y() - 90)) * -1.0f * moveX;
-            transformation().translation.z() += std::cos(math::toRadians(transformation().rotation.y() - 90)) * moveX;
+        if (moveHorizontal != 0) {
+            transformation().translation = transformation().translation.add(left().mul(moveHorizontal));
         }
 
-        transformation().translation.y() += moveY;
+        if (moveDepth != 0) {
+            transformation().translation = transformation().translation.add(forward().mul(moveDepth));
+        }
+
+        const_cast<input::Controller *>(m_controller)->mouseSensitivity = 2;
+
+        rotatePitch(m_controller->rotatePitch * m_controller->mouseSensitivity);
+        rotateYaw(m_controller->rotateYaw * m_controller->mouseSensitivity);
+
+        const_cast<input::Controller *>(m_controller)->rotateYaw = 0;
+        const_cast<input::Controller *>(m_controller)->rotatePitch = 0;
     }
 
     math::Matrix4x4<float>
     FreeCamera::viewMatrix() const noexcept {
-        return math::Matrix4x4<float>{}
-                   .identity()
-                   .rotate({math::toRadians(transformation().rotation.x()), 0.0f, 0.0f})
-                   .rotate({0.0f, math::toRadians(transformation().rotation.y()), 0.0f})
-                   .translate({-transformation().translation.x(), -transformation().translation.y(), -transformation().translation.z()});
+
+        return math::createCameraViewMatrix(m_forward, m_up)
+                .mul(math::Matrix4x4<float>{}.translate({-position().x(), -position().y(), -position().z()}));
+    }
+
+    math::Vector3f
+    FreeCamera::left() const noexcept {
+        return m_up.cross(m_forward).normalize();
+    }
+
+    void
+    FreeCamera::setYawAndPitch(float yaw, float pitch) noexcept {
+        m_forward.x() = std::cos(pitch) * std::sin(yaw);
+        m_forward.y() = -std::sin(pitch);
+        m_forward.z() =  std::cos(pitch) * std::cos(yaw);
     }
 
 } // namespace interface

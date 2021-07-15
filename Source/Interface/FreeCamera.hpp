@@ -16,6 +16,9 @@ namespace interface {
             : public Camera {
         const input::Controller *m_controller;
 
+        math::Vector3f m_forward{0.0f, 0.0f, 1.0f};
+        math::Vector3f m_up{0.0f, 1.0f, 0.0f};
+
     public:
         [[nodiscard]] inline explicit
         FreeCamera(const input::Controller *controller, math::Vector3f position = {}) noexcept
@@ -28,6 +31,33 @@ namespace interface {
 
         [[nodiscard]] math::Matrix4x4<float>
         viewMatrix() const noexcept override;
+
+        [[nodiscard]] inline constexpr math::Vector3f &
+        forward() noexcept {
+            return m_forward;
+        }
+
+        [[nodiscard]] inline math::Vector3f
+        position() const noexcept {
+            return transformation().translation;
+        }
+
+        [[nodiscard]] inline constexpr math::Vector3f
+        up() const noexcept {
+            return m_up;
+        }
+
+        [[nodiscard]] math::Vector3f
+        left() const noexcept;
+
+        void
+        rotatePitch(float angle) noexcept;
+
+        void
+        rotateYaw(float angle) noexcept;
+
+        void
+        setYawAndPitch(float yaw, float pitch) noexcept override;
     };
 
 } // namespace interface

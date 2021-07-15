@@ -19,6 +19,9 @@ namespace interface {
                 : ecs::Entity(nullptr, {position, {}, {}}) {
         }
 
+        virtual void
+        setYawAndPitch(float yaw, float pitch) noexcept = 0;
+
         [[nodiscard]] virtual math::Matrix4x4<float>
         viewMatrix() const noexcept = 0;
     };
