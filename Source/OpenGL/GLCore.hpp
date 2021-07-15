@@ -20,8 +20,8 @@
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
-#include "Source/OpenGL/Resources/ShaderProgram.hpp"
-#include "Source/OpenGL/Resources/Uniform.hpp"
+#include "Source/OpenGL/Shaders/ShaderProgram.hpp"
+#include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
 

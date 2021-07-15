@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Source/OpenGL/Resources/Uniform.hpp"
+#include "Source/OpenGL/Shaders/Uniform.hpp"
 
 #include <GL/glew.h>
 
