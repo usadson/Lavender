@@ -31,8 +31,8 @@ namespace gle {
             : public GraphicsAPI {
         WindowAPI *m_windowAPI{nullptr};
 
-        std::vector<ModelGeometryDescriptor> m_geometryDescriptors{};
-        std::vector<TextureDescriptor> m_textureDescriptors{};
+        std::vector<std::unique_ptr<ModelGeometryDescriptor>> m_geometryDescriptors{};
+        std::vector<std::unique_ptr<TextureDescriptor>> m_textureDescriptors{};
         std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
 
         std::unique_ptr<ShaderProgram> m_shaderProgram{};

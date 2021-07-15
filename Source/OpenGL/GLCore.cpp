@@ -81,7 +81,9 @@ namespace gle {
         glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
         glBindVertexArray(0);
-        return &m_geometryDescriptors.emplace_back(vao, vbo.value(), ebo.value(), tbo.value(), std::size(geometry.indices), GL_UNSIGNED_INT);
+        m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
+                vao, vbo.value(), ebo.value(), tbo.value(), std::size(geometry.indices), GL_UNSIGNED_INT));
+        return m_geometryDescriptors.back().get();
     }
 
     std::optional<unsigned int>
@@ -234,17 +236,25 @@ namespace gle {
 
         m_uniformView.store(m_camera->viewMatrix());
 
-        for (const auto &entityPtr : m_entityList->data()) {
-            const auto &entity = *entityPtr;
-            if (entity.modelDescriptor() == nullptr)
+        for (const auto &entity : m_entityList->data()) {
+            assert(entity != nullptr);
+
+            if (entity->modelDescriptor() == nullptr)
                 continue;
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, static_cast<const TextureDescriptor *>(entity.modelDescriptor()->albedoTextureDescriptor())->textureID());
+            if (entity->modelDescriptor()->albedoTextureDescriptor() != nullptr) {
+                auto *albedoTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->albedoTextureDescriptor());
 
-            m_uniformTransformation.store(entity.transformation().toMatrix());
+                if (albedoTexture->textureID() != 0) {
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, albedoTexture->textureID());
+                }
+            }
 
-            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity.modelDescriptor()->geometryDescriptor());
+            m_uniformTransformation.store(entity->transformation().toMatrix());
+
+            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity->modelDescriptor()->geometryDescriptor());
+            assert(geometry != nullptr);
             glBindVertexArray(geometry->vao());
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
             glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);

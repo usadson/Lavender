@@ -355,14 +355,15 @@ namespace gle {
                 return nullptr;
             }
 
-            return &m_geometryDescriptors.emplace_back(
+            m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
                 vao,
                 information.vbo,
                 information.ebo,
                 information.tbo,
                 information.indexCount,
                 information.eboType
-            );
+            ));
+            return m_geometryDescriptors.back().get();
         } catch (...) {
             std::printf("[GL] GLTFLoader: JSON exception caught\n");
             return nullptr;

@@ -98,7 +98,8 @@ namespace gle {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
-        return &m_textureDescriptors.emplace_back(textureID);
+        m_textureDescriptors.push_back(std::make_unique<TextureDescriptor>(textureID));
+        return m_textureDescriptors.back().get();
     }
 
 } // namespace gle
