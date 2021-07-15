@@ -146,7 +146,7 @@ namespace math {
                 requires(Dimensions == 3) {
             const auto cx = y() * other.z() - z() * other.y();
             const auto cy = z() * other.x() - x() * other.z();
-            const auto cz = x() * other.y() - y() * other.z();
+            const auto cz = x() * other.y() - y() * other.x();
             return Vector<Type, 3>(cx, cy, cz);
         }
 
