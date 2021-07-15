@@ -182,18 +182,22 @@ namespace math {
         }
 
         [[nodiscard]] inline Vector<Type, Dimensions>
-        rotate(Type angleDegrees) const noexcept {
+        rotate(Type angleDegrees) const noexcept
+                requires(Dimensions == 2) {
             const auto rad = toRadians(angleDegrees);
             const auto cos = static_cast<Type>(std::cos(rad));
             const auto sin = static_cast<Type>(std::sin(rad));
 
-            if constexpr (Dimensions == 2)
-                return {x() * cos - y() * sin,
-                        x() * sin + y() * cos};
-            return {};
+            return {x() * cos - y() * sin,
+                    x() * sin + y() * cos};
         }
     };
 
     using Vector2u = Vector<std::uint32_t, 2>;
+    using Vector3f = Vector<float, 3>;
+
+    [[nodiscard]] Vector3f
+    rotateV3f(Vector3f input, float angle, Vector3f axis) noexcept;
+
 
 } // namespace math
