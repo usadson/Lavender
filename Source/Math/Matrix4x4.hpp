@@ -115,6 +115,9 @@ namespace math {
     };
 
     [[nodiscard]] Matrix4x4<float>
+    createCameraViewMatrix(Vector3f forward, Vector3f up) noexcept;
+
+    [[nodiscard]] Matrix4x4<float>
     createPerspectiveProjectionMatrix(float fov, float width, float height, float zNear, float zFar) noexcept;
 
 } // namespace math

@@ -20,7 +20,14 @@ add_library(project_diagnostics INTERFACE)
 include(CMake/CompilerDiagnostics.cmake)
 set_project_diagnostics(project_diagnostics)
 
+option(ENABLE_TESTING "" ON)
+
 include(CMake/Libraries.cmake)
 
 add_subdirectory(Resources)
 add_subdirectory(Source)
+
+if (ENABLE_TESTING)
+    enable_testing()
+    add_subdirectory(Testing)
+endif()

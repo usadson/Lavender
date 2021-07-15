@@ -33,3 +33,11 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 
 find_package(nlohmann_json REQUIRED)
+
+if (ENABLE_TESTING)
+	find_package(GTest)
+	if (NOT GTest_FOUND)
+		# Build GTest at compile time
+		add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/GoogleTest)
+	endif()
+endif()
