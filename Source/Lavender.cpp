@@ -68,6 +68,8 @@ Lavender::run() {
         true
     });
 
+    assert(texture != nullptr);
+
     resources::ModelDescriptor modelInput{geometry};
     modelInput.attachTexture(resources::TextureSlot::ALBEDO, texture);
 
@@ -76,6 +78,21 @@ Lavender::run() {
     m_mainEntity = m_entityList.create(model);
     m_mainEntity->transformation().translation = {0.0f, 0.0f, 2.0f};
     m_mainEntity->transformation().scaling = {0.5f, 0.5f, 0.5f};
+
+    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
+        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
+        true
+    });
+
+    auto *planeGeometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Plane.gltf");
+    assert(planeGeometry != nullptr);
+    auto planeModelDescriptor = resources::ModelDescriptor{planeGeometry};
+    planeModelDescriptor.attachTexture(resources::TextureSlot::ALBEDO, planeTexture);
+    auto *planeModel = m_graphicsAPI->uploadModelDescriptor(std::forward<resources::ModelDescriptor>(planeModelDescriptor));
+    assert(planeModel != nullptr);
+    auto *planeEntity = m_entityList.create(planeModel);
+    assert(planeEntity != nullptr);
+    planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
 
     float temp = 0;
     std::uint16_t frameCount{0};
