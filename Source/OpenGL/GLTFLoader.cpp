@@ -360,7 +360,7 @@ namespace gle {
                 information.vbo,
                 information.ebo,
                 information.tbo,
-                information.indexCount,
+                static_cast<GLsizei>(information.indexCount),
                 information.eboType
             ));
             return m_geometryDescriptors.back().get();
