@@ -21,6 +21,7 @@
 #include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
+#include "Source/OpenGL/Resources/RenderQuad.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
@@ -47,8 +48,13 @@ namespace gle {
         GBuffer m_gBuffer;
         std::unique_ptr<ShaderProgram> m_lightingPassShader{};
 
+        RenderQuad m_renderQuad;
+
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
+
+        [[nodiscard]] bool
+        createLights() noexcept;
 
         [[nodiscard]] std::optional<unsigned int>
         createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &) const noexcept;

@@ -10,6 +10,7 @@
 
 #include "Source/OpenGL/GLCore.hpp"
 
+#include <random>
 #include <string_view>
 #include <type_traits>
 
@@ -23,6 +24,16 @@
 #include "Source/Window/WindowAPI.hpp"
 
 constexpr const std::string_view g_lightingVertexShaderCode = R"(
+    #version 330 core
+
+    layout (location = 0) in vec2 vertex_position;
+
+    out vec2 fragment_textureCoordinates;
+
+    void main() {
+        gl_Position = vec4(vertex_position, 0.0, 1.0);
+        fragment_textureCoordinates = vertex_position * 0.5 + 0.5;
+    }
 )";
 
 constexpr const std::string_view g_lightingFragmentShaderCode = R"(
@@ -46,25 +57,23 @@ constexpr const std::string_view g_lightingFragmentShaderCode = R"(
     uniform vec3 viewPos;
 
     void main() {
-        // retrieve data from G-buffer
-        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
-        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
-        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
-        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
-        float specular = 1.0;
+//        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
+//        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
+//        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
+//        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
+//        float specular = 1.0;
+//
+//        // then calculate lighting as usual
+//        vec3 lighting = albedo * 0.1; // hard-coded ambient component
+//        vec3 viewDir = normalize(viewPos - fragPos);
+//
+//        for (int i = 0; i < NR_LIGHTS; ++i) {
+//            vec3 lightDir = normalize(lights[i].m_position - fragPos);
+//            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
+//            lighting += diffuse;
+//        }
 
-        // then calculate lighting as usual
-        vec3 lighting = albedo * 0.1; // hard-coded ambient component
-        vec3 viewDir = normalize(viewPos - fragPos);
-
-        for (int i = 0; i < NR_LIGHTS; ++i) {
-            // diffuse
-            vec3 lightDir = normalize(lights[i].m_position - fragPos);
-            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
-            lighting += diffuse;
-        }
-
-        outColor = vec4(lighting, 1.0);
+        outColor = vec4(1.0, 1.0, 0.0, 1.0);
     }
 )";
 
@@ -161,6 +170,33 @@ namespace gle {
         return ebo;
     }
 
+    bool
+    Core::createLights() noexcept {
+        constexpr const std::size_t lightCount = 32;
+        std::default_random_engine engine;
+        std::uniform_real_distribution<float> positionDistrib(-3.0f, 3.0f);
+        std::uniform_real_distribution<float> colorDistrib(0.5, 1.0);
+
+        const auto program = m_lightingPassShader->programID();
+        glUseProgram(program);
+
+        for (std::size_t i = 0; i < lightCount; i++) {
+            auto location = glGetUniformLocation(program, ("lights[" + std::to_string(i) + "].m_position").c_str());
+            glUniform3f(location, positionDistrib(engine), positionDistrib(engine), positionDistrib(engine));
+
+            location = glGetUniformLocation(program, ("lights[" + std::to_string(i) + "].m_color").c_str());
+            glUniform3f(location, colorDistrib(engine), colorDistrib(engine), colorDistrib(engine));
+
+/*                // update attenuation parameters and calculate radius
+                const float linear = 0.7;
+                const float quadratic = 1.8;
+                shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
+                shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);*/
+        }
+
+        return glGetError() == GL_NO_ERROR;
+    }
+
     std::optional<unsigned int>
     Core::createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &textureCoordinates) const noexcept {
         GLuint tbo{};
@@ -212,11 +248,25 @@ namespace gle {
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!setupGeneralShader())
+        if (!setupGeneralShader()) {
+            std::puts("[GL] Core: failed to setup GBuffer shader");
             return false;
+        }
 
-        if (!setupLightingPassShader())
+        if (!setupLightingPassShader()) {
+            std::puts("[GL] Core: failed to setup lighting pass shader");
             return false;
+        }
+
+        if (!createLights()) {
+            std::puts("[GL] Core: failed to create lights");
+            return false;
+        }
+
+        if (!m_renderQuad.generate()) {
+            std::puts("[GL] Core: failed to generate the render quad");
+            return false;
+        }
 
         const auto size = m_windowAPI->queryFramebufferSize();
         onResize({size.x(), size.y()});
@@ -232,7 +282,12 @@ namespace gle {
             glEnable(GL_FRAMEBUFFER_SRGB);
         }
 
-        return glGetError() == GL_NO_ERROR;
+        if (glGetError() != GL_NO_ERROR) {
+            std::puts("[GL] Core: failed to do finalizing steps");
+            return false;
+        }
+
+        return true;
     }
 
     bool
@@ -256,6 +311,7 @@ namespace gle {
             std::abort();
         }
 
+        glUseProgram(m_shaderProgram->programID());
         m_uniformProjection.store(math::createPerspectiveProjectionMatrix(
             70, static_cast<float>(size.width()), static_cast<float>(size.height()), 0.1f, 1000));
     }
@@ -294,13 +350,22 @@ namespace gle {
             glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);
         }
 
-//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-//        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 //        glBindVertexArray(0);
-//
-//        glUseProgram(0);
 
-//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_gBuffer.texturePosition());
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureNormal());
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureColorSpec());
+
+        glUseProgram(m_lightingPassShader->programID());
+        m_renderQuad.draw();
 
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
@@ -316,6 +381,8 @@ namespace gle {
 
         if (!m_shaderProgram->isValid())
             return false;
+
+        m_shaderProgram->printUniforms();
 
         auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
         if (location == -1) {
@@ -348,10 +415,22 @@ namespace gle {
 
     bool
     Core::setupLightingPassShader() noexcept {
-//        m_lightingPassShader = std::make_unique<ShaderProgram>(
-//            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_lightingVertexShaderCode),
-//            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_lightingFragmentShaderCode)
-//        );
+        m_lightingPassShader = std::make_unique<ShaderProgram>(
+            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_lightingVertexShaderCode),
+            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_lightingFragmentShaderCode)
+        );
+
+        if (!m_lightingPassShader->isValid()) {
+            std::puts("[GL] Core: failed to create lighting pass shader");
+            return false;
+        }
+
+        const auto program = m_lightingPassShader->programID();
+        glUseProgram(program);
+        glUniform1i(glGetUniformLocation(program, "gPosition"), 0);
+        glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
+        glUniform1i(glGetUniformLocation(program, "gAlbedoSpec"), 2);
+
         return true;
     }
 
