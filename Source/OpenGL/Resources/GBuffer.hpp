@@ -40,11 +40,6 @@ namespace gle {
             destroy();
         }
 
-        [[nodiscard]] inline constexpr GL::FramebufferType
-        buffer() const noexcept {
-            return m_buffer;
-        }
-
         void
         destroy() noexcept;
 
@@ -53,6 +48,26 @@ namespace gle {
 
         [[nodiscard]] bool
         generate(std::size_t width, std::size_t height) noexcept;
+
+        [[nodiscard]] inline constexpr GL::FramebufferType
+        buffer() const noexcept {
+            return m_buffer;
+        }
+
+        [[nodiscard]] inline constexpr GL::TextureType
+        texturePosition() const noexcept {
+            return m_position;
+        }
+
+        [[nodiscard]] inline constexpr GL::TextureType
+        textureNormal() const noexcept {
+            return m_normal;
+        }
+
+        [[nodiscard]] inline constexpr GL::TextureType
+        textureColorSpec() const noexcept {
+            return m_colorSpec;
+        }
     };
 
 } // namespace gle
