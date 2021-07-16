@@ -16,6 +16,7 @@ add_library(OpenGLAPIEngine OBJECT
         Shaders/ShaderProgram.cpp
         Shaders/Uniform.cpp
         TextureLoader.cpp
+        Utils.cpp
 )
 
 target_link_libraries(OpenGLAPIEngine
