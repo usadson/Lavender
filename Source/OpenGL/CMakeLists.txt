@@ -12,6 +12,7 @@ add_library(OpenGLAPIEngine OBJECT
         GraphicsHandle.hpp
         GLTFLoader.cpp
         Resources/GBuffer.cpp
+        Resources/RenderQuad.cpp
         Shaders/Shader.cpp
         Shaders/ShaderProgram.cpp
         Shaders/Uniform.cpp
