@@ -23,6 +23,7 @@ add_library(OpenGLAPIEngine OBJECT
 target_link_libraries(OpenGLAPIEngine
   PRIVATE project_diagnostics
   PUBLIC GLEW::GLEW
-         OpenGL::GL)
+         OpenGL::GL
+         nlohmann_json::nlohmann_json)
 
 add_dependencies(OpenGLAPIEngine SPIRV_Shaders)
