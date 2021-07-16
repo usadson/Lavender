@@ -22,12 +22,60 @@
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
+constexpr const std::string_view g_lightingVertexShaderCode = R"(
+)";
+
+constexpr const std::string_view g_lightingFragmentShaderCode = R"(
+    #version 330 core
+
+    out vec4 outColor;
+
+    in vec2 fragment_textureCoordinates;
+
+    uniform sampler2D gPosition;
+    uniform sampler2D gNormal;
+    uniform sampler2D gAlbedoSpec;
+
+    struct Light {
+        vec3 m_position;
+        vec3 m_color;
+    };
+
+    const int NR_LIGHTS = 32;
+    uniform Light lights[NR_LIGHTS];
+    uniform vec3 viewPos;
+
+    void main() {
+        // retrieve data from G-buffer
+        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
+        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
+        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
+        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
+        float specular = 1.0;
+
+        // then calculate lighting as usual
+        vec3 lighting = albedo * 0.1; // hard-coded ambient component
+        vec3 viewDir = normalize(viewPos - fragPos);
+
+        for (int i = 0; i < NR_LIGHTS; ++i) {
+            // diffuse
+            vec3 lightDir = normalize(lights[i].m_position - fragPos);
+            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
+            lighting += diffuse;
+        }
+
+        outColor = vec4(lighting, 1.0);
+    }
+)";
+
 constexpr std::string_view g_vertexShaderCode = R"(
     #version 150 core
 
     in vec3 position;
     in vec2 vertex_textureCoordinates;
 
+    out vec3 fragment_position;
+    out vec3 fragment_normal;
     out vec2 fragment_textureCoordinates;
 
     uniform mat4 u_transform;
@@ -35,23 +83,33 @@ constexpr std::string_view g_vertexShaderCode = R"(
     uniform mat4 u_view;
 
     void main() {
-        gl_Position = (u_projection * u_view * u_transform) * vec4(position, 1.0);
+        vec4 worldPosition = u_transform * vec4(position, 1.0);
+
+        gl_Position = u_projection * u_view * worldPosition;
+
+        fragment_position = worldPosition.xyz;
+        fragment_normal = vec3(1.0, 1.0, 1.0);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
 
 constexpr std::string_view g_fragmentShaderCode = R"(
-    #version 150 core
+    #version 330 core
 
+    in vec3 fragment_position;
+    in vec3 fragment_normal;
     in vec2 fragment_textureCoordinates;
 
-    out vec4 outColor;
+    layout (location = 0) out vec3 outPosition;
+    layout (location = 1) out vec3 outNormal;
+    layout (location = 2) out vec4 outAlbedoSpec;
 
     uniform sampler2D texAlbedo;
 
     void main() {
-        vec4 albedoColor = texture(texAlbedo, fragment_textureCoordinates);
-        outColor = albedoColor;
+        outPosition = fragment_position;
+        outNormal = normalize(fragment_normal);
+        outAlbedoSpec = texture(texAlbedo, fragment_textureCoordinates);
     }
 )";
 
@@ -154,42 +212,11 @@ namespace gle {
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        m_shaderProgram = std::make_unique<ShaderProgram>(
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_vertexShaderCode),
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_fragmentShaderCode)
-        );
-
-        if (!m_shaderProgram->isValid())
+        if (!setupGeneralShader())
             return false;
 
-        auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
-        if (location == -1) {
-            std::printf("[GL] Core: failed to find attribute location named \"position\"\n");
+        if (!setupLightingPassShader())
             return false;
-        }
-
-        m_shaderAttribPosition = static_cast<GLuint>(location);
-        glEnableVertexAttribArray(m_shaderAttribPosition);
-
-        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_textureCoordinates");
-        if (location == -1) {
-            std::printf("[GL] Core: failed to find attribute location named \"vertex_textureCoordinates\"\n");
-            return false;
-        }
-
-        m_shaderAttribTextureCoordinates = static_cast<GLuint>(location);
-        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
-
-        glBindFragDataLocation(m_shaderProgram->programID(), 0, "outColor");
-
-        glUseProgram(m_shaderProgram->programID());
-        auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
-        glUniform1i(uniformLocation, 0); // texture bank 0
-        m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
-        m_uniformView = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_view"));
-
-        // TODO update when resolution changes.
-        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
 
         const auto size = m_windowAPI->queryFramebufferSize();
         onResize({size.x(), size.y()});
@@ -224,6 +251,11 @@ namespace gle {
     Core::onResize(math::Size2D<std::uint32_t> size) noexcept {
         glViewport(0, 0, static_cast<GLsizei>(size.width()), static_cast<GLsizei>(size.height()));
 
+        if (!m_gBuffer.generate(size.width(), size.height())) {
+            std::puts("[GL] Core: failed to generate GBuffer");
+            std::abort();
+        }
+
         m_uniformProjection.store(math::createPerspectiveProjectionMatrix(
             70, static_cast<float>(size.width()), static_cast<float>(size.height()), 0.1f, 1000));
     }
@@ -231,6 +263,8 @@ namespace gle {
     void
     Core::renderEntities() noexcept {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.buffer());
 
         glUseProgram(m_shaderProgram->programID());
 
@@ -266,9 +300,59 @@ namespace gle {
 //
 //        glUseProgram(0);
 
+//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
             printf("[GL] Core: Error: %u\n", err);
+    }
+
+    bool
+    Core::setupGeneralShader() noexcept {
+        m_shaderProgram = std::make_unique<ShaderProgram>(
+            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_vertexShaderCode),
+            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_fragmentShaderCode)
+        );
+
+        if (!m_shaderProgram->isValid())
+            return false;
+
+        auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
+        if (location == -1) {
+            std::printf("[GL] Core: failed to find attribute location named \"position\"\n");
+            return false;
+        }
+
+        m_shaderAttribPosition = static_cast<GLuint>(location);
+        glEnableVertexAttribArray(m_shaderAttribPosition);
+
+        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_textureCoordinates");
+        if (location == -1) {
+            std::printf("[GL] Core: failed to find attribute location named \"vertex_textureCoordinates\"\n");
+            return false;
+        }
+
+        m_shaderAttribTextureCoordinates = static_cast<GLuint>(location);
+        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
+
+        glUseProgram(m_shaderProgram->programID());
+        auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
+        glUniform1i(uniformLocation, 0); // texture bank 0
+        m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
+        m_uniformView = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_view"));
+
+        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
+
+        return true;
+    }
+
+    bool
+    Core::setupLightingPassShader() noexcept {
+//        m_lightingPassShader = std::make_unique<ShaderProgram>(
+//            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_lightingVertexShaderCode),
+//            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_lightingFragmentShaderCode)
+//        );
+        return true;
     }
 
     const resources::ModelDescriptor *

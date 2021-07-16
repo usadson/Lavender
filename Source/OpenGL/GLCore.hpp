@@ -20,6 +20,7 @@
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/GraphicsHandle.hpp"
+#include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
@@ -43,6 +44,9 @@ namespace gle {
         UniformMatrix4 m_uniformProjection{-1};
         UniformMatrix4 m_uniformView{-1};
 
+        GBuffer m_gBuffer;
+        std::unique_ptr<ShaderProgram> m_lightingPassShader{};
+
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
 
@@ -54,6 +58,12 @@ namespace gle {
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;
+
+        [[nodiscard]] bool
+        setupGeneralShader() noexcept;
+
+        [[nodiscard]] bool
+        setupLightingPassShader() noexcept;
 
     public:
         [[nodiscard]] inline explicit
