@@ -30,6 +30,9 @@ namespace gle {
             return m_programID != 0 && m_vertexShader.isValid() && m_fragmentShader.isValid();
         }
 
+        void
+        printUniforms() const noexcept;
+
         [[nodiscard]] constexpr inline unsigned int
         programID() const noexcept {
             return m_programID;

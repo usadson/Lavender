@@ -12,9 +12,14 @@
 #include <array>
 #include <iostream>
 
+#include <cassert>
+#include <cstdio>
+
 #include <GL/glew.h>
 
-#include "Shader.hpp"
+#include "Source/OpenGL/Shaders/Shader.hpp"
+#include "Source/OpenGL/Utils.hpp"
+
 
 namespace gle {
 
@@ -49,6 +54,27 @@ namespace gle {
 
         if (m_programID != 0) {
             glDeleteProgram(m_programID);
+        }
+    }
+
+    void
+    ShaderProgram::printUniforms() const noexcept {
+        GLint count;
+        glGetProgramiv(m_programID, GL_ACTIVE_UNIFORMS, &count);
+        std::printf("[GL] Shader: printUniforms: Active Uniforms: %d\n", count);
+
+        assert(count >= 0);
+
+        std::array<GLchar, 16> name{};
+        GLsizei nameLength;
+        GLint size;
+        GLenum type;
+        for (GLuint i = 0; i < static_cast<GLuint>(count); i++) {
+            glGetActiveUniform(m_programID, i, std::size(name), &nameLength, &size, &type, std::data(name));
+
+            static_cast<void>(nameLength);
+            std::printf("[GL] Shader: printUniforms: #%d Type: %s Name: %s\n",
+                        i, utils::convertGLTypeToString(type).data(), std::data(name));
         }
     }
 
