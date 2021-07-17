@@ -40,6 +40,7 @@ namespace gle {
         std::unique_ptr<ShaderProgram> m_shaderProgram{};
         GLuint m_shaderAttribPosition{};
         GLuint m_shaderAttribTextureCoordinates{};
+        GLuint m_shaderAttribNormal{};
 
         UniformMatrix4 m_uniformTransformation{-1};
         UniformMatrix4 m_uniformProjection{-1};

@@ -81,6 +81,7 @@ constexpr std::string_view g_vertexShaderCode = R"(
     #version 150 core
 
     in vec3 position;
+    in vec3 vertex_normal;
     in vec2 vertex_textureCoordinates;
 
     out vec3 fragment_position;
@@ -97,7 +98,7 @@ constexpr std::string_view g_vertexShaderCode = R"(
         gl_Position = u_projection * u_view * worldPosition;
 
         fragment_position = worldPosition.xyz;
-        fragment_normal = vec3(1.0, 1.0, 1.0);
+        fragment_normal = vertex_normal;
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
@@ -384,23 +385,19 @@ namespace gle {
 
         m_shaderProgram->printUniforms();
 
-        auto location = glGetAttribLocation(m_shaderProgram->programID(), "position");
-        if (location == -1) {
-            std::printf("[GL] Core: failed to find attribute location named \"position\"\n");
-            return false;
-        }
+        GLint location;
+#define RESOLVE_ATTRIB_LOCATION(name, variable) \
+        location = glGetAttribLocation(m_shaderProgram->programID(), name); \
+        if (location == -1) { \
+            std::printf("[GL] Core: failed to find attribute location named \"" name "\"\n"); \
+            return false; \
+        } \
+        (variable) = static_cast<GLuint>(location); \
+        glEnableVertexAttribArray(variable);
 
-        m_shaderAttribPosition = static_cast<GLuint>(location);
-        glEnableVertexAttribArray(m_shaderAttribPosition);
-
-        location = glGetAttribLocation(m_shaderProgram->programID(), "vertex_textureCoordinates");
-        if (location == -1) {
-            std::printf("[GL] Core: failed to find attribute location named \"vertex_textureCoordinates\"\n");
-            return false;
-        }
-
-        m_shaderAttribTextureCoordinates = static_cast<GLuint>(location);
-        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
+        RESOLVE_ATTRIB_LOCATION("position", m_shaderAttribPosition)
+        RESOLVE_ATTRIB_LOCATION("vertex_normal", m_shaderAttribNormal)
+        RESOLVE_ATTRIB_LOCATION("vertex_textureCoordinates", m_shaderAttribTextureCoordinates)
 
         glUseProgram(m_shaderProgram->programID());
         auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
