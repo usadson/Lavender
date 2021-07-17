@@ -94,6 +94,7 @@ namespace gle {
 
         GLuint vbo{};
         GLuint tbo{};
+        GLuint nbo{};
     };
 
     struct GLTFResourceInfo {
@@ -295,6 +296,52 @@ namespace gle {
         return false;
     }
 
+    [[nodiscard]] inline static bool
+    gltfGenerateNBO(GLTFInformation &information, const nlohmann::json &mesh, GLuint attributeLocation) {
+        const auto &attribs = mesh["primitives"][0]["attributes"];
+        if (attribs.find("NORMAL") == std::cend(attribs)) {
+            // No normal data in this Mesh
+            return true;
+        }
+
+        const auto accessorIndex = attribs["NORMAL"].get<std::size_t>();
+        const auto resource = gltfResolveResourceInfo(accessorIndex, information.json, information.buffers);
+        if (!resource.has_value()){
+            std::printf("[GL] GLTFLoader: failed to resolve resource info for NBO\n");
+            return false;
+        }
+
+        const auto &accessorType = resource->accessor["type"].get<std::string>();
+        if (accessorType != "VEC3") {
+            std::printf("[GL] GLTFLoader: unexpected bufferView.type for NBO: \"%s\"\n", accessorType.c_str());
+            return false;
+        }
+
+        glGenBuffers(1, &information.nbo);
+        if (glGetError() != GL_NO_ERROR) {
+            std::puts("[GL] GLTFLoader: couldn't generate buffers for NBO");
+            return false;
+        }
+
+        if (resource->accessor["componentType"].get<GLenum>() != GL_FLOAT) {
+            std::puts("[GL] GLTFLoader: invalid NBO accessor.componentType");
+            return false;
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, information.nbo);
+        std::printf("attribLocation=%u\n", attributeLocation);
+        glVertexAttribPointer(attributeLocation, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        const auto *dataBegin = &resource->buffer[static_cast<std::size_t>(resource->byteOffset)];
+        glBufferData(GL_ARRAY_BUFFER, resource->byteLength, dataBegin, GL_STATIC_DRAW);
+
+        auto err = glGetError();
+        if (err == GL_NO_ERROR)
+            return true;
+        std::printf("[GL] GLTFLoader: failed copy GLTF to NBO data: %zu\n", static_cast<std::size_t>(err));
+        return false;
+    }
+
     [[nodiscard]] resources::ModelGeometryDescriptor *
     Core::loadGLTFModelGeometry(std::string_view fileName) noexcept {
         std::ifstream stream{std::string(fileName)};
@@ -351,7 +398,12 @@ namespace gle {
             }
 
             if (!gltfGenerateTBO(information, mesh, m_shaderAttribTextureCoordinates)) {
-                std::puts("[GL] GLTFLoader: failed to generate VBO!");
+                std::puts("[GL] GLTFLoader: failed to generate TBO!");
+                return nullptr;
+            }
+
+            if (!gltfGenerateNBO(information, mesh, m_shaderAttribNormal)) {
+                std::puts("[GL] GLTFLoader: failed to generate NBO!");
                 return nullptr;
             }
 
@@ -360,7 +412,7 @@ namespace gle {
                 information.vbo,
                 information.ebo,
                 information.tbo,
-                0,
+                information.nbo,
                 static_cast<GLsizei>(information.indexCount),
                 information.eboType
             ));
