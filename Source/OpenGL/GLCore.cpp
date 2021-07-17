@@ -149,7 +149,7 @@ namespace gle {
 
         glBindVertexArray(0);
         m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
-                vao, vbo.value(), ebo.value(), tbo.value(), std::size(geometry.indices), GL_UNSIGNED_INT));
+                vao, vbo.value(), ebo.value(), tbo.value(), static_cast<GLsizei>(std::size(geometry.indices)), GL_UNSIGNED_INT));
         return m_geometryDescriptors.back().get();
     }
 

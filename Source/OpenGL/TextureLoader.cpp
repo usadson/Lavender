@@ -45,8 +45,10 @@ namespace gle {
             return GL_UNSIGNED_SHORT;
         if constexpr (sizeof(unsigned char) == 4)
             return GL_UNSIGNED_INT;
+#ifndef _WIN32
         assert(false);
         return GL_INVALID_ENUM;
+#endif
     }
 
     [[nodiscard]] inline constexpr GLenum

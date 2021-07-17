@@ -8,18 +8,33 @@
 
 #include <cmath>
 
+#if defined(_WIN32) || !defined(M_PI)
+#   include <numbers>
+#   define LAVENDER_MATH_USE_MODERN
+#endif
+
 namespace math {
+
+    template <typename Type>
+    [[nodiscard]] inline constexpr
+    Type pi() noexcept {
+#ifdef LAVENDER_MATH_USE_MODERN
+        return std::numbers::pi_v<Type>;
+#else
+        return static_cast<Type>(M_PI);
+#endif
+    }
 
     template <typename Type>
     [[nodiscard]] inline constexpr Type
     toDegrees(Type radians) noexcept {
-        return (radians * 180) / static_cast<Type>(M_PI);
+        return (radians * 180) / pi<Type>();
     }
 
     template <typename Type>
     [[nodiscard]] inline constexpr Type
     toRadians(Type degrees) noexcept {
-        return (degrees * static_cast<Type>(M_PI)) / 180;
+        return (degrees * pi<Type>()) / 180;
     }
 
 } // namespace math

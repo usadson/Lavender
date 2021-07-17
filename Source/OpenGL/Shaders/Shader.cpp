@@ -89,7 +89,7 @@ namespace gle {
 
         if (success == GL_FALSE) {
             std::array<char, 512> buffer{};
-            glGetShaderInfoLog(m_shaderID, std::size(buffer), nullptr, std::data(buffer));
+            glGetShaderInfoLog(m_shaderID, static_cast<GLsizei>(std::size(buffer)), nullptr, std::data(buffer));
             std::cout << "[GL] Shader: compile error!\n";
             std::cout << "[GL] Shader: " << std::data(buffer) << '\n';
 

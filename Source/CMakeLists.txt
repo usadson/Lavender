@@ -21,6 +21,7 @@ add_subdirectory(Window)
 target_link_libraries(LavenderCore
   PRIVATE project_diagnostics
   PUBLIC  glfw ${GLFW_LIBRARIES}
+          GLEW::GLEW
 )
 
 target_link_libraries(Lavender
@@ -31,4 +32,5 @@ target_link_libraries(Lavender
           OpenGLAPIEngine
           VulkanAPIEngine
           nlohmann_json::nlohmann_json
+          GLEW::GLEW
 )

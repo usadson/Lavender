@@ -39,7 +39,7 @@ namespace gle {
 
         if (success == GL_FALSE) {
             std::array<char, 512> buffer{};
-            glGetProgramInfoLog(m_programID, std::size(buffer), nullptr, std::data(buffer));
+            glGetProgramInfoLog(m_programID, static_cast<GLsizei>(std::size(buffer)), nullptr, std::data(buffer));
             std::cerr << "[GL] ShaderProgram: link error\n";
             std::cerr << "[GL] ShaderProgram: " << std::data(buffer) << '\n';
             return;
@@ -70,7 +70,8 @@ namespace gle {
         GLint size;
         GLenum type;
         for (GLuint i = 0; i < static_cast<GLuint>(count); i++) {
-            glGetActiveUniform(m_programID, i, std::size(name), &nameLength, &size, &type, std::data(name));
+            glGetActiveUniform(m_programID, i, static_cast<GLsizei>(std::size(name)),
+                               &nameLength, &size, &type, std::data(name));
 
             static_cast<void>(nameLength);
             std::printf("[GL] Shader: printUniforms: #%d Type: %s Name: %s\n",
