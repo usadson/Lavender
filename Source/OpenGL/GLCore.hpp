@@ -19,7 +19,7 @@
 
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Size2D.hpp"
-#include "Source/OpenGL/GraphicsHandle.hpp"
+#include "Source/OpenGL/ModelGeometryDescriptor.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"

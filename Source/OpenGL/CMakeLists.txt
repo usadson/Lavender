@@ -9,7 +9,7 @@
 add_library(OpenGLAPIEngine OBJECT
         DebugMessenger.cpp
         GLCore.cpp
-        GraphicsHandle.hpp
+        ModelGeometryDescriptor.hpp
         GLTFLoader.cpp
         Resources/GBuffer.cpp
         Resources/RenderQuad.cpp
