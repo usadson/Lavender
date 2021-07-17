@@ -13,6 +13,7 @@ out/
 *.dll
 *.exe
 *.log
+*.trace
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                        IDE Files                        #
