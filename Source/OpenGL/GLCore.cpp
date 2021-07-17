@@ -57,23 +57,23 @@ constexpr const std::string_view g_lightingFragmentShaderCode = R"(
     uniform vec3 viewPos;
 
     void main() {
-//        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
-//        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
-//        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
-//        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
-//        float specular = 1.0;
-//
-//        // then calculate lighting as usual
-//        vec3 lighting = albedo * 0.1; // hard-coded ambient component
-//        vec3 viewDir = normalize(viewPos - fragPos);
-//
-//        for (int i = 0; i < NR_LIGHTS; ++i) {
-//            vec3 lightDir = normalize(lights[i].m_position - fragPos);
-//            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
-//            lighting += diffuse;
-//        }
+        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
+        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
+        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
+        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
+        float specular = 1.0;
 
-        outColor = vec4(1.0, 1.0, 0.0, 1.0);
+        // then calculate lighting as usual
+        vec3 lighting = albedo * 0.1; // hard-coded ambient component
+        vec3 viewDir = normalize(viewPos - fragPos);
+
+        for (int i = 0; i < NR_LIGHTS; ++i) {
+            vec3 lightDir = normalize(lights[i].m_position - fragPos);
+            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
+            lighting += diffuse;
+        }
+
+        outColor = vec4(lighting, 1.0);
     }
 )";
 
