@@ -360,6 +360,7 @@ namespace gle {
                 information.vbo,
                 information.ebo,
                 information.tbo,
+                0,
                 static_cast<GLsizei>(information.indexCount),
                 information.eboType
             ));

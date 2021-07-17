@@ -23,17 +23,19 @@ namespace gle {
         GLuint m_vbo{};
         GLuint m_ebo{};
         GLuint m_tbo{};
+        GLuint m_nbo{}; // normal buffer
         GLsizei m_indexCount{};
 
         GLenum m_indexType{};
 
     public:
         [[nodiscard]] inline constexpr
-        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLsizei indexCount, GLenum indexType) noexcept
+        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLuint nbo, GLsizei indexCount, GLenum indexType) noexcept
                 : m_vao(vao)
                 , m_vbo(vbo)
                 , m_ebo(ebo)
                 , m_tbo(tbo)
+                , m_nbo(nbo)
                 , m_indexCount(indexCount)
                 , m_indexType(indexType) {
         }
@@ -51,6 +53,11 @@ namespace gle {
         [[nodiscard]] inline constexpr GLenum
         indexType() const noexcept {
             return m_indexType;
+        }
+
+        [[nodiscard]] inline constexpr GLenum
+        nbo() const noexcept {
+            return m_nbo;
         }
 
         [[nodiscard]] inline constexpr GLuint
