@@ -17,15 +17,18 @@
 
 namespace gle {
 
+    constexpr const std::array<GLfloat, 12> vertexData{
+        -1.0f, -1.0f,
+        1.0f, -1.0f,
+        1.0f,  1.0f,
+
+        -1.0f, -1.0f,
+        1.0f,  1.0f,
+        -1.0f,  1.0f,
+    };
+
     bool
     RenderQuad::generate() noexcept {
-        constexpr const std::array<GLfloat, 8> vertexData{
-            -1.0f,  1.0f,
-            -1.0f, -1.0f,
-            1.0f,  1.0f,
-            1.0f, -1.0f,
-        };
-
         // setup plane VAO
         glGenVertexArrays(1, &m_vao);
         glBindVertexArray(m_vao);
@@ -61,7 +64,7 @@ namespace gle {
         assert(m_vao != 0);
         assert(m_vbo != 0);
         glBindVertexArray(m_vao);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, std::size(vertexData) / 2);
         glBindVertexArray(0);
     }
 
