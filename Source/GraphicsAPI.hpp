@@ -14,7 +14,7 @@
 
 #include <cstdint>
 
-#include "Source/ECS/EntityList.hpp"
+#include "Source/ECS/Forward.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Input/Forward.hpp"
 #include "Source/Interface/Forward.hpp"
