@@ -64,7 +64,7 @@ namespace gle {
         assert(m_vao != 0);
         assert(m_vbo != 0);
         glBindVertexArray(m_vao);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, std::size(vertexData) / 2);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(std::size(vertexData) / 2));
         glBindVertexArray(0);
     }
 
