@@ -6,10 +6,10 @@
 # Group Inc.
 
 add_library(VulkanAPIEngine OBJECT
-  "Pipeline.cpp"
-  "SwapChain.cpp"
-  "VulkanCore.cpp"
- "DestroyGuard.hpp" "DestoyGuard.cpp" "SwapChainElement.hpp")
+        DestroyGuard.hpp
+        Pipeline.cpp
+        SwapChain.cpp
+        VulkanCore.cpp)
 
 target_link_libraries(VulkanAPIEngine
   PRIVATE project_diagnostics
