@@ -17,20 +17,20 @@ namespace base {
      */
     template<typename Type>
     class ArrayView {
-        Type *m_data;
-        std::uint32_t m_size;
+        Type *m_data{};
+        std::uint32_t m_size{};
 
     public:
-        ArrayView() = default;
-        ArrayView(ArrayView &&) = default;
-        ArrayView(const ArrayView &) = default;
-        ArrayView &operator=(ArrayView &&) = default;
-        ArrayView &operator=(const ArrayView &) = default;
+        [[nodiscard]] ArrayView() noexcept = default;
+        [[nodiscard]] ArrayView(ArrayView &&) noexcept = default;
+        [[nodiscard]] ArrayView(const ArrayView &) noexcept = default;
+        ArrayView &operator=(ArrayView &&) noexcept = default;
+        ArrayView &operator=(const ArrayView &) noexcept = default;
 
         [[nodiscard]] inline constexpr
         ArrayView(Type *data, std::uint32_t size) noexcept
-            : m_data(data)
-            , m_size(size) {
+                : m_data(data)
+                , m_size(size) {
         }
 
         [[nodiscard]] inline constexpr std::uint32_t &
@@ -38,7 +38,7 @@ namespace base {
             return m_size;
         }
 
-        [[nodiscard]] inline constexpr const std::uint32_t &
+        [[nodiscard]] inline constexpr std::uint32_t
         size() const noexcept {
             return m_size;
         }
