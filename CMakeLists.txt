@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 include(CMake/Version.cmake)
 
@@ -23,6 +23,7 @@ set_project_diagnostics(project_diagnostics)
 option(ENABLE_TESTING "" ON)
 
 include(CMake/Libraries.cmake)
+include(CMake/PreCompiledHeaders.cmake)
 
 add_subdirectory(Resources)
 add_subdirectory(Source)

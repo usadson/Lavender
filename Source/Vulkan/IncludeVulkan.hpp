@@ -11,6 +11,8 @@
 
 #pragma once
 
+#ifndef VULKAN_HPP
+
 /**
  * Disabling spaceship operator<=> since it is improperly implemented
  * (by either the vulkan.hpp authors or my compiler). It gives warnings
@@ -33,3 +35,4 @@
 
 #include <vulkan/vulkan.hpp>
 
+#endif // VULKAN_HPP
