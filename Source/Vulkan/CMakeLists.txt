@@ -6,7 +6,7 @@
 # Group Inc.
 
 add_library(VulkanAPIEngine OBJECT
-        DestroyGuard.hpp
+        DestroyGuard.cpp
         Pipeline.cpp
         SwapChain.cpp
         VulkanCore.cpp)
