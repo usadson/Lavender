@@ -10,17 +10,40 @@
 
 namespace base {
 
-	struct Version {
-        std::uint8_t major;
-        std::uint8_t minor;
-        std::uint8_t patch;
+    struct Version {
+        std::uint8_t m_major{};
+        std::uint8_t m_minor{};
+        std::uint8_t m_patch{};
+
+        template <typename T>
+        [[nodiscard]] inline constexpr
+        Version(T major, T minor, T patch) noexcept
+                : m_major(static_cast<std::uint8_t>(major))
+                , m_minor(static_cast<std::uint8_t>(minor))
+                , m_patch(static_cast<std::uint8_t>(patch)) {
+        }
 
         [[nodiscard]] inline constexpr std::uint32_t
         asCombined() const noexcept {
-            return (static_cast<std::uint32_t>(major) << 16)
-                | (static_cast<std::uint32_t>(minor) << 8)
-                | (static_cast<std::uint32_t>(patch));
+            return (static_cast<std::uint32_t>(m_major) << 16)
+                 | (static_cast<std::uint32_t>(m_minor) << 8)
+                 | (static_cast<std::uint32_t>(m_patch));
         }
-	};
+
+        [[nodiscard]] inline constexpr std::uint8_t
+        major() const noexcept {
+            return m_major;
+        }
+
+        [[nodiscard]] inline constexpr std::uint8_t
+        minor() const noexcept {
+            return m_minor;
+        }
+
+        [[nodiscard]] inline constexpr std::uint8_t
+        patch() const noexcept {
+            return m_patch;
+        }
+    };
 
 } // namespace base
