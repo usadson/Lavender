@@ -1,6 +1,6 @@
 (1) Vulkan and the Vulkan logo are registered trademarks of the Khronos Group
     Inc.
 
-(2) OpenGL® and the oval logo are trademarks or registered trademarks of
+(2) OpenGLÂ® and the oval logo are trademarks or registered trademarks of
     Hewlett Packard Enterprise in the United States and/or other countries
     worldwide.
