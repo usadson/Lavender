@@ -17,8 +17,8 @@ namespace window {
     class GLFWCore
             : public WindowAPI {
 
-        [[nodiscard]]
-        std::string_view getGLFWError() const noexcept;
+        [[nodiscard]] std::string_view
+        getGLFWError() const noexcept;
 
         GLFWwindow *m_window{nullptr};
 
