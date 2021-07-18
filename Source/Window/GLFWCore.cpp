@@ -246,7 +246,7 @@ namespace window {
 
     bool
     GLFWCore::shouldClose() {
-        return glfwWindowShouldClose(m_window);
+        return glfwWindowShouldClose(m_window) == GLFW_TRUE;
     }
 
     void

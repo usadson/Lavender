@@ -211,7 +211,7 @@ namespace gle {
         const auto size = static_cast<GLsizeiptr>(std::size(textureCoordinates) * sizeof(textureCoordinates[0]));
         glBufferData(GL_ARRAY_BUFFER, size, std::data(textureCoordinates), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, false, 0, nullptr);
+        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return tbo;
