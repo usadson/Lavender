@@ -284,6 +284,8 @@ namespace gle {
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ZERO);
 
         if (contextVersion.major >= 3) {
             glEnable(GL_FRAMEBUFFER_SRGB);
