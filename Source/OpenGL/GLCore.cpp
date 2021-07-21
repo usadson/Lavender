@@ -23,112 +23,6 @@
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
-constexpr const std::string_view g_lightingVertexShaderCode = R"(
-    #version 330 core
-
-    layout (location = 0) in vec2 vertex_position;
-
-    out vec2 fragment_textureCoordinates;
-
-    void main() {
-        gl_Position = vec4(vertex_position, 0.0, 1.0);
-        fragment_textureCoordinates = vertex_position * 0.5 + 0.5;
-    }
-)";
-
-constexpr const std::string_view g_lightingFragmentShaderCode = R"(
-    #version 330 core
-
-    out vec4 outColor;
-
-    in vec2 fragment_textureCoordinates;
-
-    uniform sampler2D gPosition;
-    uniform sampler2D gNormal;
-    uniform sampler2D gAlbedoSpec;
-
-    struct Light {
-        vec3 m_position;
-        vec3 m_color;
-    };
-
-    const int NR_LIGHTS = 32;
-    uniform Light lights[NR_LIGHTS];
-    uniform vec3 viewPos;
-
-    void main() {
-        vec3 fragPos = texture(gPosition, fragment_textureCoordinates).rgb;
-        vec3 normal = texture(gNormal, fragment_textureCoordinates).rgb;
-        vec3 albedo = texture(gAlbedoSpec, fragment_textureCoordinates).rgb;
-        //float specular = texture(gAlbedoSpec, fragment_textureCoordinates).a;
-        float specular = 1.0;
-
-        // then calculate lighting as usual
-        vec3 lighting = albedo * 0.1; // hard-coded ambient component
-        vec3 viewDir = normalize(viewPos - fragPos);
-
-        if (normal == vec3(0.0, 0.0, 0.0)) {
-            // This normal is invalid, and results in no color.
-            outColor = vec4(lighting, 1.0);
-            return;
-        }
-
-        for (int i = 0; i < NR_LIGHTS; ++i) {
-            vec3 lightDir = normalize(lights[i].m_position - fragPos);
-            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
-            lighting += diffuse;
-        }
-
-        outColor = vec4(lighting, 1.0);
-    }
-)";
-
-constexpr std::string_view g_vertexShaderCode = R"(
-    #version 150 core
-
-    in vec3 position;
-    in vec3 vertex_normal;
-    in vec2 vertex_textureCoordinates;
-
-    out vec3 fragment_position;
-    out vec3 fragment_normal;
-    out vec2 fragment_textureCoordinates;
-
-    uniform mat4 u_transform;
-    uniform mat4 u_projection;
-    uniform mat4 u_view;
-
-    void main() {
-        vec4 worldPosition = u_transform * vec4(position, 1.0);
-
-        gl_Position = u_projection * u_view * worldPosition;
-
-        fragment_position = worldPosition.xyz;
-        fragment_normal = normalize(vertex_normal);
-        fragment_textureCoordinates = vertex_textureCoordinates;
-    }
-)";
-
-constexpr std::string_view g_fragmentShaderCode = R"(
-    #version 330 core
-
-    in vec3 fragment_position;
-    in vec3 fragment_normal;
-    in vec2 fragment_textureCoordinates;
-
-    layout (location = 0) out vec3 outPosition;
-    layout (location = 1) out vec3 outNormal;
-    layout (location = 2) out vec4 outAlbedoSpec;
-
-    uniform sampler2D texAlbedo;
-
-    void main() {
-        outPosition = fragment_position;
-        outNormal = normalize(fragment_normal);
-        outAlbedoSpec = texture(texAlbedo, fragment_textureCoordinates);
-    }
-)";
-
 namespace gle {
 
     static_assert(std::is_same_v<GLfloat, float>);
@@ -384,8 +278,8 @@ namespace gle {
     bool
     Core::setupGeneralShader() noexcept {
         m_shaderProgram = std::make_unique<ShaderProgram>(
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_vertexShaderCode),
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_fragmentShaderCode)
+            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::VERTEX, "gbuffer.vert"),
+            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::FRAGMENT, "gbuffer.frag")
         );
 
         if (!m_shaderProgram->isValid())
@@ -421,8 +315,8 @@ namespace gle {
     bool
     Core::setupLightingPassShader() noexcept {
         m_lightingPassShader = std::make_unique<ShaderProgram>(
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::VERTEX, g_lightingVertexShaderCode),
-            Shader(Shader::ConstructionMode::GLSL_SOURCE, ShaderType::FRAGMENT, g_lightingFragmentShaderCode)
+            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::VERTEX, "lighting_pass.vert"),
+            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::FRAGMENT, "lighting_pass.frag")
         );
 
         if (!m_lightingPassShader->isValid()) {
