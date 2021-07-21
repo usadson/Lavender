@@ -25,7 +25,7 @@ namespace gle {
         }
 
         [[nodiscard]] bool
-        setLight(std::size_t index, math::Vector3f position, math::Vector3f color) noexcept;
+        setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept;
 
         [[nodiscard]] bool
         setup() noexcept;

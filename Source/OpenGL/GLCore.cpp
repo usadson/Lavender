@@ -81,7 +81,8 @@ namespace gle {
         for (std::size_t i = 0; i < lightCount; i++) {
             if (!m_lightingPassShader.setLight(i,
                     {positionDistrib(engine), positionDistrib(engine), positionDistrib(engine)},
-                    {colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)})) {
+                    {colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)},
+                    0.3f)) {
                 std::printf("[GL] Core: failed to set light #%zu\n", i);
                 return false;
             }

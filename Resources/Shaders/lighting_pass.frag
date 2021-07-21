@@ -17,6 +17,7 @@ uniform sampler2D gAlbedoSpec;
 struct Light {
     vec3 m_position;
     vec3 m_color;
+    float m_radius;
 };
 
 const int NR_LIGHTS = 32;
@@ -42,8 +43,12 @@ void main() {
 
     for (int i = 0; i < NR_LIGHTS; ++i) {
         vec3 lightDir = normalize(lights[i].m_position - fragPos);
-        vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
-        lighting += diffuse;
+        float distance = length(lights[i].m_position - fragPos);
+
+        if (distance < lights[i].m_radius) {
+            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
+            lighting += diffuse;
+        }
     }
 
     outColor = vec4(lighting, 1.0);

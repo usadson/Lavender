@@ -12,7 +12,7 @@
 namespace gle {
 
     bool
-    LightingPassShader::setLight(std::size_t index, math::Vector3f position, math::Vector3f color) noexcept {
+    LightingPassShader::setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept {
         if (!m_program || index >= 32)
             return false;
 
@@ -27,6 +27,9 @@ namespace gle {
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_color").c_str());
         glUniform3f(location, color.x(), color.y(), color.z());
+
+        location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_radius").c_str());
+        glUniform1f(location, radius);
 
         return glGetError() == GL_NO_ERROR;
     }
