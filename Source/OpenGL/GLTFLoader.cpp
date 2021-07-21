@@ -371,9 +371,9 @@ namespace gle {
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
 
-            glEnableVertexAttribArray(m_shaderAttribPosition);
-            glEnableVertexAttribArray(m_shaderAttribNormal);
-            glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
+            glEnableVertexAttribArray(m_gBufferShader.attributeLocationPosition());
+            glEnableVertexAttribArray(m_gBufferShader.attributeLocationNormal());
+            glEnableVertexAttribArray(m_gBufferShader.attributeLocationTextureCoordinates());
 
             GLTFInformation information{fileName, json, buffers};
 
@@ -382,17 +382,17 @@ namespace gle {
                 return nullptr;
             }
 
-            if (!gltfGenerateVBO(information, mesh, m_shaderAttribPosition)) {
+            if (!gltfGenerateVBO(information, mesh, m_gBufferShader.attributeLocationPosition())) {
                 std::puts("[GL] GLTFLoader: failed to generate VBO!");
                 return nullptr;
             }
 
-            if (!gltfGenerateTBO(information, mesh, m_shaderAttribTextureCoordinates)) {
+            if (!gltfGenerateTBO(information, mesh, m_gBufferShader.attributeLocationTextureCoordinates())) {
                 std::puts("[GL] GLTFLoader: failed to generate TBO!");
                 return nullptr;
             }
 
-            if (!gltfGenerateNBO(information, mesh, m_shaderAttribNormal)) {
+            if (!gltfGenerateNBO(information, mesh, m_gBufferShader.attributeLocationNormal())) {
                 std::puts("[GL] GLTFLoader: failed to generate NBO!");
                 return nullptr;
             }

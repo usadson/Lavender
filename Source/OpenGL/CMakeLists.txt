@@ -13,6 +13,7 @@ add_library(OpenGLAPIEngine OBJECT
         GLTFLoader.cpp
         Resources/GBuffer.cpp
         Resources/RenderQuad.cpp
+        Shaders/GBufferShader.cpp
         Shaders/LightingPassShader.cpp
         Shaders/Shader.cpp
         Shaders/ShaderProgram.cpp

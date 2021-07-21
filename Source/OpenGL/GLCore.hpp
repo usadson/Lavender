@@ -22,6 +22,7 @@
 #include "Source/OpenGL/ModelGeometryDescriptor.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
+#include "Source/OpenGL/Shaders/GBufferShader.hpp"
 #include "Source/OpenGL/Shaders/LightingPassShader.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
@@ -38,16 +39,9 @@ namespace gle {
         std::vector<std::unique_ptr<TextureDescriptor>> m_textureDescriptors{};
         std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
 
-        std::unique_ptr<ShaderProgram> m_shaderProgram{};
-        GLuint m_shaderAttribPosition{};
-        GLuint m_shaderAttribTextureCoordinates{};
-        GLuint m_shaderAttribNormal{};
-
-        UniformMatrix4 m_uniformTransformation{-1};
-        UniformMatrix4 m_uniformProjection{-1};
-        UniformMatrix4 m_uniformView{-1};
-
         GBuffer m_gBuffer;
+
+        GBufferShader m_gBufferShader{};
         LightingPassShader m_lightingPassShader{};
 
         RenderQuad m_renderQuad;
@@ -66,9 +60,6 @@ namespace gle {
 
         [[nodiscard]] static bool
         initializeGLEW() noexcept;
-
-        [[nodiscard]] bool
-        setupGeneralShader() noexcept;
 
     public:
         [[nodiscard]] inline explicit

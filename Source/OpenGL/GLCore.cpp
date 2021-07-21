@@ -45,8 +45,8 @@ namespace gle {
         if (!tbo.has_value())
             return nullptr;
 
-        glEnableVertexAttribArray(m_shaderAttribPosition);
-        glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
+        glEnableVertexAttribArray(m_gBufferShader.attributeLocationPosition());
+        glEnableVertexAttribArray(m_gBufferShader.attributeLocationTextureCoordinates());
 
         glBindVertexArray(0);
         m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
@@ -103,7 +103,7 @@ namespace gle {
         const auto size = static_cast<GLsizeiptr>(std::size(textureCoordinates) * sizeof(textureCoordinates[0]));
         glBufferData(GL_ARRAY_BUFFER, size, std::data(textureCoordinates), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(m_shaderAttribTextureCoordinates, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(m_gBufferShader.attributeLocationTextureCoordinates(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return tbo;
@@ -122,7 +122,7 @@ namespace gle {
         const auto size = static_cast<GLsizeiptr>(std::size(vertices) * sizeof(vertices[0]));
         glBufferData(GL_ARRAY_BUFFER, size, std::data(vertices), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(m_shaderAttribPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(m_gBufferShader.attributeLocationPosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return vbo;
@@ -141,7 +141,7 @@ namespace gle {
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!setupGeneralShader()) {
+        if (!m_gBufferShader.setup()) {
             std::puts("[GL] Core: failed to setup GBuffer shader");
             return false;
         }
@@ -206,8 +206,8 @@ namespace gle {
             std::abort();
         }
 
-        glUseProgram(m_shaderProgram->programID());
-        m_uniformProjection.store(math::createPerspectiveProjectionMatrix(
+        glUseProgram(m_gBufferShader.programID());
+        m_gBufferShader.uploadProjectionMatrix(math::createPerspectiveProjectionMatrix(
             70, static_cast<float>(size.width()), static_cast<float>(size.height()), 0.1f, 1000));
     }
 
@@ -217,9 +217,9 @@ namespace gle {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(m_shaderProgram->programID());
+        glUseProgram(m_gBufferShader.programID());
 
-        m_uniformView.store(m_camera->viewMatrix());
+        m_gBufferShader.uploadViewMatrix(m_camera->viewMatrix());
 
         for (const auto &entity : m_entityList->data()) {
             assert(entity != nullptr);
@@ -236,7 +236,7 @@ namespace gle {
                 }
             }
 
-            m_uniformTransformation.store(entity->transformation().toMatrix());
+            m_gBufferShader.uploadTransformationMatrix(entity->transformation().toMatrix());
 
             const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity->modelDescriptor()->geometryDescriptor());
             assert(geometry != nullptr);
@@ -265,43 +265,6 @@ namespace gle {
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
             printf("[GL] Core: Error: %u\n", err);
-    }
-
-    bool
-    Core::setupGeneralShader() noexcept {
-        m_shaderProgram = std::make_unique<ShaderProgram>(
-            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::VERTEX, "gbuffer.vert"),
-            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::FRAGMENT, "gbuffer.frag")
-        );
-
-        if (!m_shaderProgram->isValid())
-            return false;
-
-        m_shaderProgram->printUniforms();
-
-        GLint location;
-#define RESOLVE_ATTRIB_LOCATION(name, variable) \
-        location = glGetAttribLocation(m_shaderProgram->programID(), name); \
-        if (location == -1) { \
-            std::printf("[GL] Core: failed to find attribute location named \"" name "\"\n"); \
-            return false; \
-        } \
-        (variable) = static_cast<GLuint>(location); \
-        glEnableVertexAttribArray(variable);
-
-        RESOLVE_ATTRIB_LOCATION("position", m_shaderAttribPosition)
-        RESOLVE_ATTRIB_LOCATION("vertex_normal", m_shaderAttribNormal)
-        RESOLVE_ATTRIB_LOCATION("vertex_textureCoordinates", m_shaderAttribTextureCoordinates)
-
-        glUseProgram(m_shaderProgram->programID());
-        auto uniformLocation = glGetUniformLocation(m_shaderProgram->programID(), "texAlbedo");
-        glUniform1i(uniformLocation, 0); // texture bank 0
-        m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_transform"));
-        m_uniformView = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_view"));
-
-        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
-
-        return true;
     }
 
     const resources::ModelDescriptor *
