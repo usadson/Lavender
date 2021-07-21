@@ -67,9 +67,9 @@ constexpr const std::string_view g_lightingFragmentShaderCode = R"(
         vec3 lighting = albedo * 0.1; // hard-coded ambient component
         vec3 viewDir = normalize(viewPos - fragPos);
 
-        if (normal == vec3(0.0, 0.0, 0.0) {
+        if (normal == vec3(0.0, 0.0, 0.0)) {
             // This normal is invalid, and results in no color.
-            outColor = vec4(lighting, 1.0:
+            outColor = vec4(lighting, 1.0);
             return;
         }
 
