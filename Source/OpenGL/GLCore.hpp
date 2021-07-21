@@ -20,10 +20,7 @@
 #include "Source/GraphicsAPI.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/ModelGeometryDescriptor.hpp"
-#include "Source/OpenGL/Resources/GBuffer.hpp"
-#include "Source/OpenGL/Resources/RenderQuad.hpp"
-#include "Source/OpenGL/Shaders/GBufferShader.hpp"
-#include "Source/OpenGL/Shaders/LightingPassShader.hpp"
+#include "Source/OpenGL/Renderer/Renderer.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
@@ -39,12 +36,7 @@ namespace gle {
         std::vector<std::unique_ptr<TextureDescriptor>> m_textureDescriptors{};
         std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
 
-        GBuffer m_gBuffer;
-
-        GBufferShader m_gBufferShader{};
-        LightingPassShader m_lightingPassShader{};
-
-        RenderQuad m_renderQuad;
+        std::unique_ptr<Renderer> m_renderer{};
 
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;

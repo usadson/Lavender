@@ -11,6 +11,7 @@ add_library(OpenGLAPIEngine OBJECT
         GLCore.cpp
         ModelGeometryDescriptor.hpp
         GLTFLoader.cpp
+        Renderer/DeferredRenderer.cpp
         Resources/GBuffer.cpp
         Resources/RenderQuad.cpp
         Shaders/GBufferShader.cpp

@@ -14,13 +14,12 @@
 #include <string_view>
 #include <type_traits>
 
-#include <cassert>
-
 #include <GL/glew.h>
 
 #include "Source/ECS/EntityList.hpp"
 #include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/DebugMessenger.hpp"
+#include "Source/OpenGL/Renderer/DeferredRenderer.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
 namespace gle {
@@ -45,8 +44,8 @@ namespace gle {
         if (!tbo.has_value())
             return nullptr;
 
-        glEnableVertexAttribArray(m_gBufferShader.attributeLocationPosition());
-        glEnableVertexAttribArray(m_gBufferShader.attributeLocationTextureCoordinates());
+        glEnableVertexAttribArray(m_renderer->attributeLocations().position);
+        glEnableVertexAttribArray(m_renderer->attributeLocations().textureCoordinates);
 
         glBindVertexArray(0);
         m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
@@ -79,7 +78,7 @@ namespace gle {
         std::uniform_real_distribution<float> colorDistrib(0.5, 1.0);
 
         for (std::size_t i = 0; i < lightCount; i++) {
-            if (!m_lightingPassShader.setLight(i,
+            if (!m_renderer->setLight(i,
                     {positionDistrib(engine), positionDistrib(engine), positionDistrib(engine)},
                     {colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)},
                     0.3f)) {
@@ -104,7 +103,7 @@ namespace gle {
         const auto size = static_cast<GLsizeiptr>(std::size(textureCoordinates) * sizeof(textureCoordinates[0]));
         glBufferData(GL_ARRAY_BUFFER, size, std::data(textureCoordinates), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(m_gBufferShader.attributeLocationTextureCoordinates(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(m_renderer->attributeLocations().textureCoordinates, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return tbo;
@@ -123,7 +122,7 @@ namespace gle {
         const auto size = static_cast<GLsizeiptr>(std::size(vertices) * sizeof(vertices[0]));
         glBufferData(GL_ARRAY_BUFFER, size, std::data(vertices), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(m_gBufferShader.attributeLocationPosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(m_renderer->attributeLocations().position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return vbo;
@@ -142,23 +141,15 @@ namespace gle {
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!m_gBufferShader.setup()) {
-            std::puts("[GL] Core: failed to setup GBuffer shader");
-            return false;
-        }
+        m_renderer = std::make_unique<DeferredRenderer>(this);
 
-        if (!m_lightingPassShader.setup()) {
-            std::puts("[GL] Core: failed to setup lighting pass shader");
+        if (!m_renderer->setup()) {
+            std::puts("[GL] Core: failed to setup renderer");
             return false;
         }
 
         if (!createLights()) {
             std::puts("[GL] Core: failed to create lights");
-            return false;
-        }
-
-        if (!m_renderQuad.generate()) {
-            std::puts("[GL] Core: failed to generate the render quad");
             return false;
         }
 
@@ -201,67 +192,14 @@ namespace gle {
     void
     Core::onResize(math::Size2D<std::uint32_t> size) noexcept {
         glViewport(0, 0, static_cast<GLsizei>(size.width()), static_cast<GLsizei>(size.height()));
-
-        if (!m_gBuffer.generate(size.width(), size.height())) {
-            std::puts("[GL] Core: failed to generate GBuffer");
-            std::abort();
-        }
-
-        glUseProgram(m_gBufferShader.programID());
-        m_gBufferShader.uploadProjectionMatrix(math::createPerspectiveProjectionMatrix(
-            70, static_cast<float>(size.width()), static_cast<float>(size.height()), 0.1f, 1000));
+        m_renderer->onResize(size);
     }
 
     void
     Core::renderEntities() noexcept {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.buffer());
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(m_gBufferShader.programID());
-
-        m_gBufferShader.uploadViewMatrix(m_camera->viewMatrix());
-
-        for (const auto &entity : m_entityList->data()) {
-            assert(entity != nullptr);
-
-            if (entity->modelDescriptor() == nullptr)
-                continue;
-
-            if (entity->modelDescriptor()->albedoTextureDescriptor() != nullptr) {
-                auto *albedoTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->albedoTextureDescriptor());
-
-                if (albedoTexture->textureID() != 0) {
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, albedoTexture->textureID());
-                }
-            }
-
-            m_gBufferShader.uploadTransformationMatrix(entity->transformation().toMatrix());
-
-            const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity->modelDescriptor()->geometryDescriptor());
-            assert(geometry != nullptr);
-            glBindVertexArray(geometry->vao());
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
-            glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-//        glBindVertexArray(0);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_gBuffer.texturePosition());
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureNormal());
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureColorSpec());
-
-        glUseProgram(m_lightingPassShader.programID());
-        m_renderQuad.draw();
+        m_renderer->render();
 
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
