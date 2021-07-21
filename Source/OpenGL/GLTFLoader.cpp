@@ -85,6 +85,8 @@ namespace gle {
     }
 
     struct GLTFInformation {
+        std::string_view name;
+
         const nlohmann::json &json;
         const std::vector<std::string> &buffers;
 
@@ -286,6 +288,7 @@ namespace gle {
     gltfGenerateNBO(GLTFInformation &information, const nlohmann::json &mesh, GLuint attributeLocation) {
         const auto &attribs = mesh["primitives"][0]["attributes"];
         if (attribs.find("NORMAL") == std::cend(attribs)) {
+            std::printf("[GL] GLTFLoader: warning: \"%s\" doesn't contains normal data!\n", std::string(information.name).c_str());
             // No normal data in this Mesh
             return true;
         }
@@ -315,7 +318,7 @@ namespace gle {
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, information.nbo);
-        std::printf("attribLocation=%u\n", attributeLocation);
+        std::printf("normal attribLocation=%u\n", attributeLocation);
         glVertexAttribPointer(attributeLocation, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         const auto *dataBegin = &resource->buffer[static_cast<std::size_t>(resource->byteOffset)];
@@ -371,7 +374,7 @@ namespace gle {
             glEnableVertexAttribArray(m_shaderAttribPosition);
             glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
-            GLTFInformation information{json, buffers};
+            GLTFInformation information{fileName, json, buffers};
 
             if (!gltfGenerateEBO(information, mesh)) {
                 std::puts("[GL] GLTFLoader: failed to generate EBO!");
