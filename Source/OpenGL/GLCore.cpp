@@ -104,7 +104,7 @@ constexpr std::string_view g_vertexShaderCode = R"(
         gl_Position = u_projection * u_view * worldPosition;
 
         fragment_position = worldPosition.xyz;
-        fragment_normal = vertex_normal;
+        fragment_normal = normalize(vertex_normal);
         fragment_textureCoordinates = vertex_textureCoordinates;
     }
 )";
