@@ -372,6 +372,7 @@ namespace gle {
             glBindVertexArray(vao);
 
             glEnableVertexAttribArray(m_shaderAttribPosition);
+            glEnableVertexAttribArray(m_shaderAttribNormal);
             glEnableVertexAttribArray(m_shaderAttribTextureCoordinates);
 
             GLTFInformation information{fileName, json, buffers};
