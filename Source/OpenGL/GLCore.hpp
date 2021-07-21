@@ -22,6 +22,7 @@
 #include "Source/OpenGL/ModelGeometryDescriptor.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
+#include "Source/OpenGL/Shaders/LightingPassShader.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
@@ -47,7 +48,7 @@ namespace gle {
         UniformMatrix4 m_uniformView{-1};
 
         GBuffer m_gBuffer;
-        std::unique_ptr<ShaderProgram> m_lightingPassShader{};
+        LightingPassShader m_lightingPassShader{};
 
         RenderQuad m_renderQuad;
 
@@ -68,9 +69,6 @@ namespace gle {
 
         [[nodiscard]] bool
         setupGeneralShader() noexcept;
-
-        [[nodiscard]] bool
-        setupLightingPassShader() noexcept;
 
     public:
         [[nodiscard]] inline explicit

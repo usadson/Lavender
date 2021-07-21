@@ -78,24 +78,16 @@ namespace gle {
         std::uniform_real_distribution<float> positionDistrib(-3.0f, 3.0f);
         std::uniform_real_distribution<float> colorDistrib(0.5, 1.0);
 
-        const auto program = m_lightingPassShader->programID();
-        glUseProgram(program);
-
         for (std::size_t i = 0; i < lightCount; i++) {
-            auto location = glGetUniformLocation(program, ("lights[" + std::to_string(i) + "].m_position").c_str());
-            glUniform3f(location, positionDistrib(engine), positionDistrib(engine), positionDistrib(engine));
-
-            location = glGetUniformLocation(program, ("lights[" + std::to_string(i) + "].m_color").c_str());
-            glUniform3f(location, colorDistrib(engine), colorDistrib(engine), colorDistrib(engine));
-
-/*                // update attenuation parameters and calculate radius
-                const float linear = 0.7;
-                const float quadratic = 1.8;
-                shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
-                shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);*/
+            if (!m_lightingPassShader.setLight(i,
+                    {positionDistrib(engine), positionDistrib(engine), positionDistrib(engine)},
+                    {colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)})) {
+                std::printf("[GL] Core: failed to set light #%zu\n", i);
+                return false;
+            }
         }
 
-        return glGetError() == GL_NO_ERROR;
+        return true;
     }
 
     std::optional<unsigned int>
@@ -154,7 +146,7 @@ namespace gle {
             return false;
         }
 
-        if (!setupLightingPassShader()) {
+        if (!m_lightingPassShader.setup()) {
             std::puts("[GL] Core: failed to setup lighting pass shader");
             return false;
         }
@@ -267,7 +259,7 @@ namespace gle {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureColorSpec());
 
-        glUseProgram(m_lightingPassShader->programID());
+        glUseProgram(m_lightingPassShader.programID());
         m_renderQuad.draw();
 
         GLenum err;
@@ -308,27 +300,6 @@ namespace gle {
         m_uniformView = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_view"));
 
         m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_shaderProgram->programID(), "u_projection"));
-
-        return true;
-    }
-
-    bool
-    Core::setupLightingPassShader() noexcept {
-        m_lightingPassShader = std::make_unique<ShaderProgram>(
-            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::VERTEX, "lighting_pass.vert"),
-            Shader(Shader::ConstructionMode::GLSL_PATH, ShaderType::FRAGMENT, "lighting_pass.frag")
-        );
-
-        if (!m_lightingPassShader->isValid()) {
-            std::puts("[GL] Core: failed to create lighting pass shader");
-            return false;
-        }
-
-        const auto program = m_lightingPassShader->programID();
-        glUseProgram(program);
-        glUniform1i(glGetUniformLocation(program, "gPosition"), 0);
-        glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
-        glUniform1i(glGetUniformLocation(program, "gAlbedoSpec"), 2);
 
         return true;
     }
