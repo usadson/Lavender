@@ -12,7 +12,7 @@
 namespace input {
 
     struct Controller {
-        float mouseSensitivity{0.02f};
+        float mouseSensitivity{0.75f};
 
         bool moveLeft{};
         bool moveRight{};

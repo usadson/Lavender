@@ -56,8 +56,6 @@ namespace interface {
             transformation().translation = transformation().translation.add(forward().mul(moveDepth));
         }
 
-        const_cast<input::Controller *>(m_controller)->mouseSensitivity = 2;
-
         rotatePitch(m_controller->rotatePitch * m_controller->mouseSensitivity);
         rotateYaw(m_controller->rotateYaw * m_controller->mouseSensitivity);
 
