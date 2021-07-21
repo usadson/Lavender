@@ -197,13 +197,6 @@ namespace gle {
         const auto *dataBegin = &resource->buffer[static_cast<std::size_t>(resource->byteOffset)];
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, resource->byteLength, dataBegin, GL_STATIC_DRAW);
 
-        base::ArrayView<const unsigned short> indices{reinterpret_cast<const unsigned short *>(dataBegin), static_cast<std::uint32_t>(static_cast<std::size_t>(resource->byteLength) / sizeof(unsigned short))};
-        for (auto it = std::begin(indices); it != std::end(indices); it += 3) {
-            std::printf("face> %hu %hu %hu\n", it[0], it[1], it[2]);
-        }
-
-        std::cout << Hexdump(reinterpret_cast<const void *>(dataBegin), static_cast<std::size_t>(resource->byteLength)) << std::flush;
-
         auto err = glGetError();
         if (err == GL_NO_ERROR)
             return true;
@@ -238,16 +231,10 @@ namespace gle {
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, information.vbo);
-        std::printf("attribLocation=%u\n", attributeLocation);
         glVertexAttribPointer(attributeLocation, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         const auto *dataBegin = &resource->buffer[static_cast<std::size_t>(resource->byteOffset)];
         glBufferData(GL_ARRAY_BUFFER, resource->byteLength, dataBegin, GL_STATIC_DRAW);
-
-        base::ArrayView<const float> vertices{reinterpret_cast<const float *>(dataBegin), static_cast<std::uint32_t>(static_cast<std::size_t>(resource->byteLength) / sizeof(float))};
-        for (auto it = std::begin(vertices); it != std::end(vertices); it += 3) {
-            std::printf("vertex> %f %f %f\n", static_cast<double>(it[0]), static_cast<double>(it[1]), static_cast<double>(it[2]));
-        }
 
         auto err = glGetError();
         if (err == GL_NO_ERROR)
@@ -283,7 +270,6 @@ namespace gle {
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, information.tbo);
-        std::printf("attribLocation=%u\n", attributeLocation);
         glVertexAttribPointer(attributeLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
         const auto *dataBegin = &resource->buffer[static_cast<std::size_t>(resource->byteOffset)];
