@@ -71,6 +71,9 @@ namespace gle {
         compileShader() noexcept;
 
         [[nodiscard]] bool
+        loadGLSLPath(std::string_view) noexcept;
+
+        [[nodiscard]] bool
         loadGLSLSource(std::string_view) noexcept;
 
         [[nodiscard]] bool

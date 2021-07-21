@@ -16,6 +16,8 @@
 
 #include <GL/glew.h>
 
+#include "Source/IO/FileInput.hpp"
+
 namespace gle {
 
     [[nodiscard]] constexpr inline GLenum
@@ -102,12 +104,32 @@ namespace gle {
     bool
     Shader::loadShaderData(ConstructionMode constructionMode, std::string_view sv) noexcept {
         switch (constructionMode) {
+        case ConstructionMode::GLSL_PATH:
+            return loadGLSLPath(sv);
         case ConstructionMode::GLSL_SOURCE:
             return loadGLSLSource(sv);
         default:
             std::cout << "[GL] Shader: loadShaderData: unimplemented constructionMode!\n";
             return false;
         }
+    }
+
+    bool
+    Shader::loadGLSLPath(std::string_view inPath) noexcept {
+        const auto path = "Resources/Shaders/" + std::string(inPath);
+        io::FileInput input{path};
+
+        if (input.error() != io::Error::NO_ERROR) {
+            std::printf("[GL] Shader: failed to loader shader \"%s\", error-code: %u\n", path.c_str(),
+                        static_cast<unsigned int>(input.error()));
+            return false;
+        }
+
+        const auto data = input.read<char>(std::size(input));
+        const auto *dataPtr = std::data(data);
+        const auto size = static_cast<GLint>(std::size(input));
+        glShaderSource(m_shaderID, 1, &dataPtr, &size);
+        return glGetError() == GL_NO_ERROR;
     }
 
     bool
