@@ -70,8 +70,8 @@ namespace gle {
         [[nodiscard]] bool
         initialize(WindowAPI *) override;
 
-        [[nodiscard]] resources::ModelGeometryDescriptor *
-        loadGLTFModelGeometry(std::string_view fileName) noexcept override;
+        [[nodiscard]] std::unique_ptr<ecs::Scene>
+        loadGLTFScene(std::string_view fileName) noexcept override;
 
         /**
          * Is called to initialize things that depend on the window size.

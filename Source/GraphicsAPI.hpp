@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <cstdint>
 
 #include "Source/ECS/Forward.hpp"
@@ -72,11 +74,8 @@ public:
     [[nodiscard]] virtual bool
     initialize(WindowAPI *) = 0;
 
-    [[nodiscard]] virtual inline resources::ModelGeometryDescriptor *
-    loadGLTFModelGeometry(std::string_view fileName) noexcept {
-        static_cast<void>(fileName);
-        return nullptr;
-    }
+    [[nodiscard]] virtual std::unique_ptr<ecs::Scene>
+    loadGLTFScene(std::string_view fileName) noexcept;
 
     virtual inline void
     onResize(math::Size2D<std::uint32_t>) noexcept {}

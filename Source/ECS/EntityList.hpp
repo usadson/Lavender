@@ -18,6 +18,8 @@
 namespace ecs {
 
     class EntityList {
+        friend class Scene;
+
         std::vector<std::unique_ptr<Entity>> m_entities;
 
         /**

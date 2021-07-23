@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 add_library(LavenderCore OBJECT
-            GraphicsAPI.hpp
+            GraphicsAPI.cpp
             Lavender.cpp
             Lavender.hpp
             Interface/FreeCamera.cpp

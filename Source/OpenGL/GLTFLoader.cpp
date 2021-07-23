@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Source/Base/ArrayView.hpp"
+#include "Source/ECS/Scene.hpp"
 #include "ThirdParty/base64.hpp"
 
 #include <cctype>
@@ -331,8 +332,8 @@ namespace gle {
         return false;
     }
 
-    [[nodiscard]] resources::ModelGeometryDescriptor *
-    Core::loadGLTFModelGeometry(std::string_view fileName) noexcept {
+    [[nodiscard]] std::unique_ptr<ecs::Scene>
+    Core::loadGLTFScene(std::string_view fileName) noexcept {
         std::ifstream stream{std::string(fileName)};
         if (!stream) {
             std::printf("[GL] GLTFLoader: failed to open file: \"%s\"\n", std::string(fileName).c_str());
@@ -406,7 +407,22 @@ namespace gle {
                 static_cast<GLsizei>(information.indexCount),
                 information.eboType
             ));
-            return m_geometryDescriptors.back().get();
+
+            auto scene = std::make_unique<ecs::Scene>(ecs::EntityList{});
+            resources::ModelDescriptor modelDescriptor{
+                m_geometryDescriptors.back().get(),
+                nullptr
+            };
+
+            const auto *model = uploadModelDescriptor(std::forward<resources::ModelDescriptor>(modelDescriptor));
+            if (model == nullptr)
+                return nullptr;
+
+            auto *entity = scene->entityList().create(model);
+            if (entity == nullptr)
+                return nullptr;
+
+            return scene;
         } catch (...) {
             std::printf("[GL] GLTFLoader: JSON exception caught\n");
             return nullptr;

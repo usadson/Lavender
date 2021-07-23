@@ -58,42 +58,46 @@ Lavender::run() {
 
     m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
 
-    auto *geometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Dispatcher.gltf");
-    if (geometry == nullptr) {
-        std::printf("[Lavender] Failed to load Dispatcher.gltf model!\n");
-        return base::ExitStatus::FAILED_LOADING_MODEL;
+    {
+        auto scene = m_graphicsAPI->loadGLTFScene("Resources/Assets/Models/Scene.gltf");
+        if (scene == nullptr) {
+            std::puts("[Lavender] Failed to load Scene.gltf!");
+            return base::ExitStatus::FAILED_LOADING_MODEL;
+        }
+
+        m_scene.import(std::move(*scene));
     }
 
     auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
-        "Resources/Assets/Textures/Dispatcher_Orange.png",
+        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
+//        "Resources/Assets/Textures/Dispatcher_Orange.png",
         true
     });
 
     assert(texture != nullptr);
 
-    resources::ModelDescriptor modelInput{geometry};
-    modelInput.attachTexture(resources::TextureSlot::ALBEDO, texture);
+    m_mainEntity = m_scene.entityList().data().back().get();
+    const_cast<resources::ModelDescriptor *>(const_cast<ecs::Entity *>(m_mainEntity)->modelDescriptor())->attachTexture(
+        resources::TextureSlot::ALBEDO, texture
+    );
 
-    auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
+    m_mainEntity->transformation().translation = {0.0f, -2.0f, 0.0f};
+    m_mainEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
 
-    m_mainEntity = m_scene.entityList().create(model);
-    m_mainEntity->transformation().translation = {0.0f, 0.0f, 2.0f};
-    m_mainEntity->transformation().scaling = {0.5f, 0.5f, 0.5f};
-
-    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
-        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
-        true
-    });
-
-    auto *planeGeometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Plane.gltf");
-    assert(planeGeometry != nullptr);
-    auto planeModelDescriptor = resources::ModelDescriptor{planeGeometry};
-    planeModelDescriptor.attachTexture(resources::TextureSlot::ALBEDO, planeTexture);
-    auto *planeModel = m_graphicsAPI->uploadModelDescriptor(std::forward<resources::ModelDescriptor>(planeModelDescriptor));
-    assert(planeModel != nullptr);
-    auto *planeEntity = m_scene.entityList().create(planeModel);
-    assert(planeEntity != nullptr);
-    planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
+//    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
+//        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
+//        true
+//    });
+//
+//    auto *planeGeometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Plane.gltf");
+//    assert(planeGeometry != nullptr);
+//    auto planeModelDescriptor = resources::ModelDescriptor{planeGeometry};
+//    planeModelDescriptor.attachTexture(resources::TextureSlot::ALBEDO, planeTexture);
+//    auto *planeModel = m_graphicsAPI->uploadModelDescriptor(std::forward<resources::ModelDescriptor>(planeModelDescriptor));
+//    assert(planeModel != nullptr);
+//    auto *planeEntity = m_scene.entityList().create(planeModel);
+//    assert(planeEntity != nullptr);
+//    planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
 
     float temp = 0;
     std::uint16_t frameCount{0};
