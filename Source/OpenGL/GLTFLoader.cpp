@@ -345,8 +345,8 @@ namespace gle {
         try {
             stream >> json;
 
-            if (json["meshes"].size() != 1) {
-                std::printf("[GL] GLTFLoader: Meshes count isn't 1 (val=%lu)\n", static_cast<unsigned long>(std::size(json["meshes"])));
+            if (std::empty(json["meshes"])) {
+                std::printf("[GL] GLTFLoader: File doesn't contain any meshes\n");
                 return nullptr;
             }
 
@@ -355,11 +355,9 @@ namespace gle {
                 return nullptr;
             }
 
-            auto &mesh = json["meshes"][0];
-
             std::vector<std::string> buffers;
             buffers.reserve(json["buffers"].size());
-            for (const auto &buffer : json["buffers"]){
+            for (const auto &buffer : json["buffers"]) {
                 auto bufferString = gltfLoadBuffer(buffer["uri"].get<std::string>(), buffer["byteLength"].get<std::size_t>());
                 if (std::empty(bufferString)) {
                     std::puts("[GL] GLTFLoader: failed to load URI buffer");
@@ -368,60 +366,54 @@ namespace gle {
                 buffers.push_back(std::move(bufferString));
             }
 
-            GLuint vao{};
-            glGenVertexArrays(1, &vao);
-            glBindVertexArray(vao);
-
-            glEnableVertexAttribArray(m_renderer->attributeLocations().position);
-            glEnableVertexAttribArray(m_renderer->attributeLocations().normal);
-            glEnableVertexAttribArray(m_renderer->attributeLocations().textureCoordinates);
-
-            GLTFInformation information{fileName, json, buffers};
-
-            if (!gltfGenerateEBO(information, mesh)) {
-                std::puts("[GL] GLTFLoader: failed to generate EBO!");
-                return nullptr;
-            }
-
-            if (!gltfGenerateVBO(information, mesh, m_renderer->attributeLocations().position)) {
-                std::puts("[GL] GLTFLoader: failed to generate VBO!");
-                return nullptr;
-            }
-
-            if (!gltfGenerateTBO(information, mesh, m_renderer->attributeLocations().textureCoordinates)) {
-                std::puts("[GL] GLTFLoader: failed to generate TBO!");
-                return nullptr;
-            }
-
-            if (!gltfGenerateNBO(information, mesh, m_renderer->attributeLocations().normal)) {
-                std::puts("[GL] GLTFLoader: failed to generate NBO!");
-                return nullptr;
-            }
-
-            m_geometryDescriptors.push_back(std::make_unique<ModelGeometryDescriptor>(
-                vao,
-                information.vbo,
-                information.ebo,
-                information.tbo,
-                information.nbo,
-                static_cast<GLsizei>(information.indexCount),
-                information.eboType
-            ));
-
             auto scene = std::make_unique<ecs::Scene>(ecs::EntityList{});
-            resources::ModelDescriptor modelDescriptor{
-                m_geometryDescriptors.back().get(),
-                nullptr
-            };
 
-            const auto *model = uploadModelDescriptor(std::forward<resources::ModelDescriptor>(modelDescriptor));
-            if (model == nullptr)
-                return nullptr;
+            for (const auto &mesh : json["meshes"]) {
 
-            auto *entity = scene->entityList().create(model);
-            if (entity == nullptr)
-                return nullptr;
+                GLuint vao{};
+                glGenVertexArrays(1, &vao);
+                glBindVertexArray(vao);
 
+                glEnableVertexAttribArray(m_renderer->attributeLocations().position);
+                glEnableVertexAttribArray(m_renderer->attributeLocations().normal);
+                glEnableVertexAttribArray(m_renderer->attributeLocations().textureCoordinates);
+
+                GLTFInformation information{fileName, json, buffers};
+
+                if (!gltfGenerateEBO(information, mesh)) {
+                    std::puts("[GL] GLTFLoader: failed to generate EBO!");
+                    return nullptr;
+                }
+
+                if (!gltfGenerateVBO(information, mesh, m_renderer->attributeLocations().position)) {
+                    std::puts("[GL] GLTFLoader: failed to generate VBO!");
+                    return nullptr;
+                }
+
+                if (!gltfGenerateTBO(information, mesh, m_renderer->attributeLocations().textureCoordinates)) {
+                    std::puts("[GL] GLTFLoader: failed to generate TBO!");
+                    return nullptr;
+                }
+
+                if (!gltfGenerateNBO(information, mesh, m_renderer->attributeLocations().normal)) {
+                    std::puts("[GL] GLTFLoader: failed to generate NBO!");
+                    return nullptr;
+                }
+
+                m_geometryDescriptors.push_back(
+                    std::make_unique<ModelGeometryDescriptor>(vao, information.vbo, information.ebo, information.tbo,
+                        information.nbo, static_cast<GLsizei>(information.indexCount), information.eboType));
+
+                resources::ModelDescriptor modelDescriptor{m_geometryDescriptors.back().get(), nullptr};
+
+                const auto *model = uploadModelDescriptor(std::forward<resources::ModelDescriptor>(modelDescriptor));
+                if (model == nullptr)
+                    return nullptr;
+
+                auto *entity = scene->entityList().create(model);
+                if (entity == nullptr)
+                    return nullptr;
+            }
             return scene;
         } catch (...) {
             std::printf("[GL] GLTFLoader: JSON exception caught\n");
