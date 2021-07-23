@@ -68,21 +68,41 @@ Lavender::run() {
         m_scene.import(std::move(*scene));
     }
 
-    auto *texture = m_graphicsAPI->createTexture(resources::TextureInput{
+    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
         "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
-//        "Resources/Assets/Textures/Dispatcher_Orange.png",
         true
     });
 
-    assert(texture != nullptr);
+    auto *dispatcherTexture = m_graphicsAPI->createTexture(resources::TextureInput{
+        "Resources/Assets/Textures/Dispatcher_Orange.png",
+        true
+    });
 
-    m_mainEntity = m_scene.entityList().data().back().get();
-    const_cast<resources::ModelDescriptor *>(const_cast<ecs::Entity *>(m_mainEntity)->modelDescriptor())->attachTexture(
-        resources::TextureSlot::ALBEDO, texture
-    );
+    assert(planeTexture != nullptr);
+    assert(dispatcherTexture != nullptr);
 
-    m_mainEntity->transformation().translation = {0.0f, -2.0f, 0.0f};
-    m_mainEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
+    for (const auto &entity : m_scene.entityList().data()) {
+        if (entity->modelDescriptor() == nullptr)
+            continue;
+
+        auto *texture = planeTexture;
+
+        if (entity->name() == "Dispatcher") {
+            m_mainEntity = entity.get();
+            texture = dispatcherTexture;
+        } else if (entity->name() == "Plane") {
+            entity->transformation().scaling = {10.0f, 10.0f, 10.0f};
+            entity->transformation().translation = {0.0f, -2.0f, 0.0f};
+        }
+
+        const_cast<resources::ModelDescriptor *>(const_cast<ecs::Entity *>(entity.get())->modelDescriptor())
+            ->attachTexture(resources::TextureSlot::ALBEDO, texture);
+    }
+
+    if (m_mainEntity == nullptr) {
+        std::puts("[GL] Failed to find main entity 'Dispatcher'");
+        return base::ExitStatus::FAILED_LOADING_MODEL;
+    }
 
 //    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
 //        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",

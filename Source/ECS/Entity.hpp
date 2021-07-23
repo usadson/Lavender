@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "Source/ECS/Forward.hpp"
 #include "Source/Math/Transformation.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
@@ -13,14 +15,25 @@
 namespace ecs {
 
     class Entity {
+        std::string m_name;
         const resources::ModelDescriptor *m_modelDescriptor{};
         math::Transformation m_transformation{};
 
     public:
-        [[nodiscard]] inline constexpr explicit
-        Entity(const resources::ModelDescriptor *modelDescriptor, math::Transformation transformation={}) noexcept
-                : m_modelDescriptor(modelDescriptor)
+        [[nodiscard]] inline explicit
+        Entity(std::string &&name, const resources::ModelDescriptor *modelDescriptor,
+               math::Transformation transformation={}) noexcept
+                : m_name(std::move(name))
+                , m_modelDescriptor(modelDescriptor)
                 , m_transformation(transformation) {
+        }
+
+        [[nodiscard]] inline explicit
+        Entity(const std::string &name, const resources::ModelDescriptor *modelDescriptor,
+               math::Transformation transformation={}) noexcept
+            : m_name(name)
+            , m_modelDescriptor(modelDescriptor)
+            , m_transformation(transformation) {
         }
 
         virtual
@@ -37,6 +50,11 @@ namespace ecs {
         [[nodiscard]] inline const resources::ModelDescriptor *
         modelDescriptor() const noexcept {
             return m_modelDescriptor;
+        }
+
+        [[nodiscard]] inline const std::string &
+        name() const noexcept {
+            return m_name;
         }
 
         [[nodiscard]] inline math::Transformation &

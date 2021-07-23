@@ -345,8 +345,8 @@ namespace gle {
         try {
             stream >> json;
 
-            if (std::empty(json["meshes"])) {
-                std::printf("[GL] GLTFLoader: File doesn't contain any meshes\n");
+            if (std::empty(json["nodes"])) {
+                std::printf("[GL] GLTFLoader: File doesn't contain any nodes\n");
                 return nullptr;
             }
 
@@ -368,7 +368,13 @@ namespace gle {
 
             auto scene = std::make_unique<ecs::Scene>(ecs::EntityList{});
 
-            for (const auto &mesh : json["meshes"]) {
+            for (const auto &node : json["nodes"]) {
+                auto meshIt = node.find("mesh");
+                if (meshIt == std::cend(node))
+                    continue;
+
+                const auto &mesh = json["meshes"][meshIt->get<std::size_t>()];
+                const auto &nodeName = node["name"];
 
                 GLuint vao{};
                 glGenVertexArrays(1, &vao);
@@ -410,7 +416,7 @@ namespace gle {
                 if (model == nullptr)
                     return nullptr;
 
-                auto *entity = scene->entityList().create(model);
+                auto *entity = scene->entityList().create(nodeName, model);
                 if (entity == nullptr)
                     return nullptr;
             }

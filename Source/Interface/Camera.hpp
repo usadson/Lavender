@@ -16,7 +16,7 @@ namespace interface {
     public:
         [[nodiscard]] inline explicit
         Camera(math::Vector3f position = {}) noexcept
-                : ecs::Entity(nullptr, {position, {}, {}}) {
+                : ecs::Entity("Camera", nullptr, {position, {}, {}}) {
         }
 
         virtual void
