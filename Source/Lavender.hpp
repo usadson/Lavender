@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "Source/Base/ExitStatus.hpp"
-#include "Source/ECS/EntityList.hpp"
+#include "Source/ECS/Scene.hpp"
 #include "Source/Input/Controller.hpp"
 #include "Source/Interface/FreeCamera.hpp"
 #include "Source/Window/WindowAPI.hpp"
@@ -22,7 +22,7 @@ class Lavender {
     input::Controller m_controller{};
     interface::FreeCamera *m_camera{};
 
-    ecs::EntityList m_entityList{};
+    ecs::Scene m_scene{ecs::EntityList{}};
     ecs::Entity *m_mainEntity{nullptr};
 
     void

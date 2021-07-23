@@ -21,7 +21,7 @@ Lavender::update(float deltaTime) noexcept {
     m_mainEntity->transformation().rotation = {0.0f, rot * 10, 0.0f};
 //    m_mainEntity->transformation().rotation = {0.0f, 0.0f, rot * 10};
 
-    for (auto &entity : std::data(m_entityList)) {
+    for (auto &entity : std::data(m_scene.entityList())) {
         entity->onUpdate(deltaTime);
     }
 
@@ -37,7 +37,8 @@ base::ExitStatus
 Lavender::run() {
     auto previousFrameTime = std::chrono::steady_clock::now();
 
-    m_camera = static_cast<interface::FreeCamera *>(m_entityList.add(std::make_unique<interface::FreeCamera>(&m_controller)));
+    m_camera = static_cast<interface::FreeCamera *>(m_scene.entityList().add(
+        std::make_unique<interface::FreeCamera>(&m_controller)));
 
     m_windowAPI = std::make_unique<window::GLFWCore>();
     if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
@@ -50,7 +51,7 @@ Lavender::run() {
     auto glVersion = m_windowAPI->queryGLContextVersion();
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
-    m_graphicsAPI = std::make_unique<gle::Core>(&m_entityList, &m_controller, m_camera);
+    m_graphicsAPI = std::make_unique<gle::Core>(&m_scene, &m_controller, m_camera);
     if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
         return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
     }
@@ -75,7 +76,7 @@ Lavender::run() {
 
     auto *model = m_graphicsAPI->uploadModelDescriptor(std::move(modelInput));
 
-    m_mainEntity = m_entityList.create(model);
+    m_mainEntity = m_scene.entityList().create(model);
     m_mainEntity->transformation().translation = {0.0f, 0.0f, 2.0f};
     m_mainEntity->transformation().scaling = {0.5f, 0.5f, 0.5f};
 
@@ -90,7 +91,7 @@ Lavender::run() {
     planeModelDescriptor.attachTexture(resources::TextureSlot::ALBEDO, planeTexture);
     auto *planeModel = m_graphicsAPI->uploadModelDescriptor(std::forward<resources::ModelDescriptor>(planeModelDescriptor));
     assert(planeModel != nullptr);
-    auto *planeEntity = m_entityList.create(planeModel);
+    auto *planeEntity = m_scene.entityList().create(planeModel);
     assert(planeEntity != nullptr);
     planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
 

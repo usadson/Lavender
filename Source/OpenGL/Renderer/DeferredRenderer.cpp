@@ -15,6 +15,7 @@
 #include <GL/glew.h>
 
 #include "Source/ECS/EntityList.hpp"
+#include "Source/ECS/Scene.hpp"
 #include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/GLCore.hpp"
 #include "Source/OpenGL/ModelGeometryDescriptor.hpp"
@@ -43,7 +44,7 @@ namespace gle {
 
         m_gBufferShader.uploadViewMatrix(core()->camera()->viewMatrix());
 
-        for (const auto &entity : core()->entityList()->data()) {
+        for (const auto &entity : std::data(core()->scene()->entityList())) {
             assert(entity != nullptr);
 
             if (entity->modelDescriptor() == nullptr)

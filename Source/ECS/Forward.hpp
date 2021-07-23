@@ -10,5 +10,6 @@ namespace ecs {
 
     class Entity;
     class EntityList;
+    class Scene;
 
 } // namespace ecs

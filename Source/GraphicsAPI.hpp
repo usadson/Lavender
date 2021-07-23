@@ -29,16 +29,16 @@ class WindowAPI;
 
 class GraphicsAPI {
 protected:
-    const ecs::EntityList *m_entityList;
+    const ecs::Scene *m_scene;
 
     const input::Controller *m_controller;
     const interface::Camera *m_camera;
 public:
     [[nodiscard]] inline constexpr explicit
-    GraphicsAPI(const ecs::EntityList *entityList,
+    GraphicsAPI(const ecs::Scene *scene,
                 const input::Controller *controller,
                 const interface::Camera *camera) noexcept
-            : m_entityList(entityList)
+            : m_scene(scene)
             , m_controller(controller)
             , m_camera(camera) {
     }
@@ -64,9 +64,9 @@ public:
     [[nodiscard]] virtual resources::TextureDescriptor *
     createTexture(const resources::TextureInput &textureInput) noexcept = 0;
 
-    [[nodiscard]] inline constexpr const ecs::EntityList *
-    entityList() const noexcept {
-        return m_entityList;
+    [[nodiscard]] inline constexpr const ecs::Scene *
+    scene() const noexcept {
+        return m_scene;
     }
 
     [[nodiscard]] virtual bool
