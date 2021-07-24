@@ -13,6 +13,7 @@
 #include "Source/Math/Size2D.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/OpenGL/Renderer/AttributeLocations.hpp"
+#include "Source/OpenGL/Renderer/RenderMode.hpp"
 
 namespace gle {
 
@@ -48,8 +49,28 @@ namespace gle {
         [[nodiscard]] virtual bool
         setup() noexcept = 0;
 
+        [[nodiscard]] inline constexpr RenderMode
+        renderMode() const noexcept {
+#ifdef CHERRY_DEBUG
+            return m_renderMode;
+#else
+            return RenderMode::DEFAULT;
+#endif
+        }
+
+#ifdef CHERRY_DEBUG
+        inline constexpr void
+        renderMode(RenderMode renderMode) noexcept {
+            m_renderMode = renderMode;
+        }
+#endif
+
     private:
         Core *m_core;
+
+#ifdef CHERRY_DEBUG
+        RenderMode m_renderMode{};
+#endif
     };
 
 } // namespace gle
