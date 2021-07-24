@@ -7,5 +7,5 @@
 #pragma once
 
 #ifndef NDEBUG
-#   define CHERRY_DEBUG
+#   define LAVENDER_BUILD_DEBUG
 #endif
