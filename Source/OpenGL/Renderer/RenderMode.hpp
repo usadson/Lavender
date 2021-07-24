@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "Source/Base/Debug.hpp"
 
 namespace gle {
@@ -22,5 +24,18 @@ namespace gle {
         DEBUG_COLOR,
 #endif
     };
+
+    [[nodiscard]] inline constexpr std::string_view
+    toString(RenderMode renderMode) noexcept {
+        switch (renderMode) {
+        case RenderMode::DEFAULT: return "default";
+#ifdef LAVENDER_BUILD_DEBUG
+        case RenderMode::DEBUG_NORMALS: return "debug-normals";
+        case RenderMode::DEBUG_POSITION: return "debug-position";
+        case RenderMode::DEBUG_COLOR: return "debug-color";
+#endif
+        default: return "(invalid)";
+        }
+    }
 
 } // namespace gle

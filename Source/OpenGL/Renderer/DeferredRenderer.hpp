@@ -64,6 +64,10 @@ namespace gle {
 
         [[nodiscard]] bool
         setupDebugEnvironment() noexcept;
+
+        void
+        renderMode(RenderMode renderMode) noexcept override;
+
 #else
         [[nodiscard]] inline static constexpr bool
         setupDebugEnvironment() noexcept {

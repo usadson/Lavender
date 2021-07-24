@@ -85,13 +85,13 @@ namespace gle {
         glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureColorSpec());
 
 #ifdef LAVENDER_BUILD_DEBUG
-        switch (renderMode()) {
+        switch (Renderer::renderMode()) {
             case RenderMode::DEFAULT:
                 glUseProgram(m_lightingPassShader.programID());
                 break;
             default:
                 glUseProgram(m_lightingPassDebugShader.programID());
-                assert(m_lightingPassDebugShader.setIndex(static_cast<int>(renderMode())));
+                assert(m_lightingPassDebugShader.setIndex(static_cast<int>(Renderer::renderMode())));
                 break;
         }
 #else
@@ -118,6 +118,14 @@ namespace gle {
         drawGBuffer();
         drawLighting();
     }
+
+#ifdef LAVENDER_BUILD_DEBUG
+    void
+    DeferredRenderer::renderMode(RenderMode renderMode) noexcept {
+        Renderer::renderMode(renderMode);
+        std::printf("[GL] Renderer: now in render mode %s\n", std::data(toString(renderMode)));
+    }
+#endif
 
     bool
     DeferredRenderer::setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept {

@@ -59,7 +59,7 @@ namespace gle {
         }
 
 #ifdef LAVENDER_BUILD_DEBUG
-        inline constexpr void
+        inline virtual void
         renderMode(RenderMode renderMode) noexcept {
             m_renderMode = renderMode;
         }
