@@ -84,7 +84,20 @@ namespace gle {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, m_gBuffer.textureColorSpec());
 
+#ifdef LAVENDER_BUILD_DEBUG
+        switch (renderMode()) {
+            case RenderMode::DEFAULT:
+                glUseProgram(m_lightingPassShader.programID());
+                break;
+            default:
+                glUseProgram(m_lightingPassDebugShader.programID());
+                assert(m_lightingPassDebugShader.setIndex(static_cast<int>(renderMode())));
+                break;
+        }
+#else
         glUseProgram(m_lightingPassShader.programID());
+#endif
+
         m_renderQuad.draw();
     }
 
@@ -128,7 +141,19 @@ namespace gle {
             return false;
         }
 
+        if (!setupDebugEnvironment()) {
+            std::puts("[GL] DeferredRenderer: failed to setup debug environment");
+            return false;
+        }
+
         return true;
     }
+
+#ifdef LAVENDER_BUILD_DEBUG
+    bool
+    DeferredRenderer::setupDebugEnvironment() noexcept {
+        return m_lightingPassDebugShader.setup();
+    }
+#endif
 
 } // namespace gle

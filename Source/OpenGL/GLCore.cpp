@@ -189,6 +189,26 @@ namespace gle {
         return true;
     }
 
+#ifdef LAVENDER_BUILD_DEBUG
+    void
+    Core::onDebugKey(input::KeyboardUpdate update) noexcept {
+        if (update.action != input::KeyboardAction::PRESS) {
+            return;
+        }
+
+        if (update.key == input::KeyboardKey::NUMPAD0) {
+            m_renderer->renderMode(RenderMode::DEFAULT);
+        } else if (update.key == input::KeyboardKey::NUMPAD1) {
+            m_renderer->renderMode(RenderMode::DEBUG_POSITION);
+        } else if (update.key == input::KeyboardKey::NUMPAD2) {
+            m_renderer->renderMode(RenderMode::DEBUG_NORMALS);
+        } else if (update.key == input::KeyboardKey::NUMPAD3) {
+            m_renderer->renderMode(RenderMode::DEBUG_COLOR);
+        }
+
+    }
+#endif
+
     void
     Core::onResize(math::Size2D<std::uint32_t> size) noexcept {
         glViewport(0, 0, static_cast<GLsizei>(size.width()), static_cast<GLsizei>(size.height()));

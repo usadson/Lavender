@@ -15,9 +15,11 @@ namespace gle {
 
     enum class RenderMode {
         DEFAULT,
-#ifdef CHERRY_DEBUG
+
+#ifdef LAVENDER_BUILD_DEBUG
         DEBUG_NORMALS,
         DEBUG_POSITION,
+        DEBUG_COLOR,
 #endif
     };
 

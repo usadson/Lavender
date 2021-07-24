@@ -73,6 +73,11 @@ namespace gle {
         [[nodiscard]] std::unique_ptr<ecs::Scene>
         loadGLTFScene(std::string_view fileName) noexcept override;
 
+#ifdef LAVENDER_BUILD_DEBUG
+        void
+        onDebugKey(input::KeyboardUpdate) noexcept override;
+#endif
+
         /**
          * Is called to initialize things that depend on the window size.
          *

@@ -25,3 +25,4 @@ void main() {
     fragment_normal = normalize(vertex_normal);
     fragment_textureCoordinates = vertex_textureCoordinates;
 }
+

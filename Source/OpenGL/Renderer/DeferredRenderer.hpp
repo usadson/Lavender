@@ -9,11 +9,16 @@
 
 #pragma once
 
+#include "Source/Base/Debug.hpp"
 #include "Source/OpenGL/Renderer/Renderer.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
 #include "Source/OpenGL/Shaders/GBufferShader.hpp"
 #include "Source/OpenGL/Shaders/LightingPassShader.hpp"
+
+#ifdef LAVENDER_BUILD_DEBUG
+#   include "Source/OpenGL/Shaders/Debug/LightingPassDebugShader.hpp"
+#endif
 
 namespace gle {
 
@@ -53,6 +58,18 @@ namespace gle {
         LightingPassShader m_lightingPassShader{};
 
         RenderQuad m_renderQuad;
+
+#ifdef LAVENDER_BUILD_DEBUG
+        LightingPassDebugShader m_lightingPassDebugShader{};
+
+        [[nodiscard]] bool
+        setupDebugEnvironment() noexcept;
+#else
+        [[nodiscard]] inline static constexpr bool
+        setupDebugEnvironment() noexcept {
+            return true;
+        }
+#endif
     };
 
 } // namespace gle

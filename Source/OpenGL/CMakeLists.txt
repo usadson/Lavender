@@ -23,6 +23,12 @@ add_library(OpenGLAPIEngine OBJECT
         Utils.cpp
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_sources(OpenGLAPIEngine PRIVATE
+            Shaders/Debug/LightingPassDebugShader.cpp
+    )
+endif()
+
 target_link_libraries(OpenGLAPIEngine
   PRIVATE project_diagnostics
   PUBLIC GLEW::GLEW
