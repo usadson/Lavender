@@ -145,7 +145,8 @@ Lavender::run() {
     return base::ExitStatus::SUCCESS;
 }
 
-void Lavender::setupController() noexcept {
+void
+Lavender::setupController() noexcept {
     m_windowAPI->registerKeyboardCallback([&](input::KeyboardUpdate update) {
         switch (update.key) {
 #define LAVENDER_MAP_KEY(key, entry) \
@@ -160,6 +161,10 @@ void Lavender::setupController() noexcept {
             LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
         default: break;
         }
+
+#ifdef LAVENDER_BUILD_DEBUG
+        m_graphicsAPI->onDebugKey(update);
+#endif
     });
     m_windowAPI->registerMouseCallback([&](input::MouseUpdate update) {
         if (update.button != input::MouseButton::NONE)

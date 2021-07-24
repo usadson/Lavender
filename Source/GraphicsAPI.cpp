@@ -13,3 +13,10 @@ GraphicsAPI::loadGLTFScene(std::string_view fileName) noexcept  {
     static_cast<void>(fileName);
     return nullptr;
 }
+
+#ifdef LAVENDER_BUILD_DEBUG
+void
+GraphicsAPI::onDebugKey(input::KeyboardUpdate) noexcept {
+    // To be overridden
+}
+#endif

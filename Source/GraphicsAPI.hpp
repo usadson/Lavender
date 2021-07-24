@@ -16,9 +16,11 @@
 
 #include <cstdint>
 
+#include "Source/Base/Debug.hpp"
 #include "Source/ECS/Forward.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Input/Forward.hpp"
+#include "Source/Input/KeyboardUpdate.hpp"
 #include "Source/Interface/Forward.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
@@ -76,6 +78,11 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<ecs::Scene>
     loadGLTFScene(std::string_view fileName) noexcept;
+
+#ifdef LAVENDER_BUILD_DEBUG
+    virtual void
+    onDebugKey(input::KeyboardUpdate) noexcept;
+#endif
 
     virtual inline void
     onResize(math::Size2D<std::uint32_t>) noexcept {}
