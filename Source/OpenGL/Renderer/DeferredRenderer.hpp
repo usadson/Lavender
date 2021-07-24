@@ -46,6 +46,9 @@ namespace gle {
         [[nodiscard]] bool
         setup() noexcept override;
 
+        void
+        syncECS() noexcept;
+
     private:
         void
         drawGBuffer() noexcept;
@@ -59,6 +62,8 @@ namespace gle {
         LightingPassShader m_lightingPassShader{};
 
         RenderQuad m_renderQuad;
+
+        std::size_t m_ecsUpdateCount{0};
 
 #ifdef LAVENDER_BUILD_DEBUG
         LightingPassDebugShader m_lightingPassDebugShader{};

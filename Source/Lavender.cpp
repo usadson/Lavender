@@ -7,7 +7,9 @@
 #include "Lavender.hpp"
 
 #include <chrono>
+#include <random>
 
+#include "Source/ECS/PointLight.hpp"
 #include "Source/OpenGL/GLCore.hpp"
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
@@ -119,6 +121,8 @@ Lavender::run() {
 //    assert(planeEntity != nullptr);
 //    planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
 
+    setupLights();
+
     float temp = 0;
     std::uint16_t frameCount{0};
     while (!m_windowAPI->shouldClose()) {
@@ -173,4 +177,26 @@ Lavender::setupController() noexcept {
         m_controller.rotatePitch -= update.moveX;
         m_controller.rotateYaw -= update.moveY;
     });
+}
+
+void
+Lavender::setupLights() noexcept {
+    constexpr const std::size_t lightCount = 32;
+    std::default_random_engine engine;
+    std::uniform_real_distribution<float> positionDistrib(-3.0f, 3.0f);
+    std::uniform_real_distribution<float> colorDistrib(0.5, 1.0);
+
+    for (std::size_t i = 0; i < lightCount; i++) {
+        auto pointLight = std::make_unique<ecs::PointLight>(
+            math::Vector3f{positionDistrib(engine), positionDistrib(engine), positionDistrib(engine)},
+            math::Vector3f{colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)},
+            3.0f,
+            0.2f,
+            0.0f,
+            0.0f,
+            1.0f
+        );
+
+        m_scene.entityList().add(std::move(pointLight));
+    }
 }

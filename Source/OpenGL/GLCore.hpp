@@ -41,9 +41,6 @@ namespace gle {
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
 
-        [[nodiscard]] bool
-        createLights() noexcept;
-
         [[nodiscard]] std::optional<unsigned int>
         createTextureBuffer(const std::vector<resources::ModelGeometry::TextureCoordType> &) const noexcept;
 

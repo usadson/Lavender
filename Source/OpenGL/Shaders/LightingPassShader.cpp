@@ -25,25 +25,26 @@ namespace gle {
         glUseProgram(program);
 
         auto location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_position").c_str());
-        glUniform3f(location, pointLight.position.x(), pointLight.position.y(), pointLight.position.z());
+        const auto &position = pointLight.transformation().translation;
+        glUniform3f(location, position.x(), position.y(), position.z());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_color").c_str());
-        glUniform3f(location, pointLight.color.x(), pointLight.color.y(), pointLight.color.z());
+        glUniform3f(location, pointLight.color().x(), pointLight.color().y(), pointLight.color().z());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_radius").c_str());
-        glUniform1f(location, pointLight.radius);
+        glUniform1f(location, pointLight.radius());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_intensity").c_str());
-        glUniform1f(location, pointLight.intensity);
+        glUniform1f(location, pointLight.intensity());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.constant").c_str());
-        glUniform1f(location, pointLight.attenuationConstant);
+        glUniform1f(location, pointLight.attenuationConstant());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.linear").c_str());
-        glUniform1f(location, pointLight.attenuationLinear);
+        glUniform1f(location, pointLight.attenuationLinear());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.exponent").c_str());
-        glUniform1f(location, pointLight.attenuationExponent);
+        glUniform1f(location, pointLight.attenuationExponent());
 
         return glGetError() == GL_NO_ERROR;
     }

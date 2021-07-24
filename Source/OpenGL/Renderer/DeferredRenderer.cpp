@@ -15,6 +15,7 @@
 #include <GL/glew.h>
 
 #include "Source/ECS/EntityList.hpp"
+#include "Source/ECS/PointLight.hpp"
 #include "Source/ECS/Scene.hpp"
 #include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/GLCore.hpp"
@@ -115,6 +116,7 @@ namespace gle {
 
     void
     DeferredRenderer::render() noexcept {
+        syncECS();
         drawGBuffer();
         drawLighting();
     }
@@ -163,5 +165,27 @@ namespace gle {
         return m_lightingPassDebugShader.setup();
     }
 #endif
+
+    void
+    DeferredRenderer::syncECS() noexcept {
+        if (core()->scene()->entityList().updateCount() == m_ecsUpdateCount)
+            return;
+        m_ecsUpdateCount = core()->scene()->entityList().updateCount();
+
+        // TODO this should be optimized in so many ways
+        std::size_t pointLightIndex{0};
+        for (const auto &entity : std::data(core()->scene()->entityList())) {
+            std::printf("EntityName: \"%s\"\n", entity->name().c_str());
+            if (entity->name() != "PointLight")
+                continue;
+
+            const auto *pointLight = static_cast<const ecs::PointLight *>(entity.get());
+            const auto result = m_lightingPassShader.setPointLight(pointLightIndex++, *pointLight);
+            assert(result);
+        }
+
+        // TODO in the future, when we have less lights than the light limit,
+        //      we should reset the data in the shader.
+    }
 
 } // namespace gle

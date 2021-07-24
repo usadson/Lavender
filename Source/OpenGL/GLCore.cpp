@@ -10,14 +10,12 @@
 
 #include "Source/OpenGL/GLCore.hpp"
 
-#include <random>
 #include <string_view>
 #include <type_traits>
 
 #include <GL/glew.h>
 
 #include "Source/ECS/EntityList.hpp"
-#include "Source/ECS/PointLight.hpp"
 #include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/OpenGL/Renderer/DeferredRenderer.hpp"
@@ -69,33 +67,6 @@ namespace gle {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         return ebo;
-    }
-
-    bool
-    Core::createLights() noexcept {
-        constexpr const std::size_t lightCount = 32;
-        std::default_random_engine engine;
-        std::uniform_real_distribution<float> positionDistrib(-3.0f, 3.0f);
-        std::uniform_real_distribution<float> colorDistrib(0.5, 1.0);
-
-        for (std::size_t i = 0; i < lightCount; i++) {
-            ecs::PointLight pointLight{
-                {positionDistrib(engine), positionDistrib(engine), positionDistrib(engine)},
-                {colorDistrib(engine), colorDistrib(engine), colorDistrib(engine)},
-                3.0f,
-                0.2f,
-                0.0f,
-                0.0f,
-                1.0f,
-            };
-
-            if (!m_renderer->setPointLight(i, pointLight)) {
-                std::printf("[GL] Core: failed to set light #%zu\n", i);
-                return false;
-            }
-        }
-
-        return true;
     }
 
     std::optional<unsigned int>
@@ -153,11 +124,6 @@ namespace gle {
 
         if (!m_renderer->setup()) {
             std::puts("[GL] Core: failed to setup renderer");
-            return false;
-        }
-
-        if (!createLights()) {
-            std::puts("[GL] Core: failed to create lights");
             return false;
         }
 
