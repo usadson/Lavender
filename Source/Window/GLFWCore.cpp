@@ -29,6 +29,16 @@ namespace window {
             case GLFW_KEY_LEFT_SHIFT: return input::KeyboardKey::LEFT_SHIFT;
             case GLFW_KEY_LEFT_CONTROL: return input::KeyboardKey::LEFT_CONTROL;
             case GLFW_KEY_SPACE: return input::KeyboardKey::SPACE;
+            case GLFW_KEY_KP_0: return input::KeyboardKey::NUMPAD0;
+            case GLFW_KEY_KP_1: return input::KeyboardKey::NUMPAD1;
+            case GLFW_KEY_KP_2: return input::KeyboardKey::NUMPAD2;
+            case GLFW_KEY_KP_3: return input::KeyboardKey::NUMPAD3;
+            case GLFW_KEY_KP_4: return input::KeyboardKey::NUMPAD4;
+            case GLFW_KEY_KP_5: return input::KeyboardKey::NUMPAD5;
+            case GLFW_KEY_KP_6: return input::KeyboardKey::NUMPAD6;
+            case GLFW_KEY_KP_7: return input::KeyboardKey::NUMPAD7;
+            case GLFW_KEY_KP_8: return input::KeyboardKey::NUMPAD8;
+            case GLFW_KEY_KP_9: return input::KeyboardKey::NUMPAD9;
             default: return input::KeyboardKey::INVALID_KEY;
         }
     }
