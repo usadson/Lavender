@@ -44,7 +44,7 @@ namespace gle {
         render() noexcept = 0;
 
         [[nodiscard]] virtual bool
-        setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept = 0;
+        setPointLight(std::size_t index, const ecs::PointLight &light) noexcept = 0;
 
         [[nodiscard]] virtual bool
         setup() noexcept = 0;

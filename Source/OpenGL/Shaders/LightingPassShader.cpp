@@ -9,10 +9,12 @@
 
 #include "Source/OpenGL/Shaders/LightingPassShader.hpp"
 
+#include "Source/ECS/PointLight.hpp"
+
 namespace gle {
 
     bool
-    LightingPassShader::setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept {
+    LightingPassShader::setPointLight(std::size_t index, const ecs::PointLight &pointLight) noexcept {
         if (!m_program || index >= 32)
             return false;
 
@@ -23,13 +25,25 @@ namespace gle {
         glUseProgram(program);
 
         auto location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_position").c_str());
-        glUniform3f(location, position.x(), position.y(), position.z());
+        glUniform3f(location, pointLight.position.x(), pointLight.position.y(), pointLight.position.z());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_color").c_str());
-        glUniform3f(location, color.x(), color.y(), color.z());
+        glUniform3f(location, pointLight.color.x(), pointLight.color.y(), pointLight.color.z());
 
         location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_radius").c_str());
-        glUniform1f(location, radius);
+        glUniform1f(location, pointLight.radius);
+
+        location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_intensity").c_str());
+        glUniform1f(location, pointLight.intensity);
+
+        location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.constant").c_str());
+        glUniform1f(location, pointLight.attenuationConstant);
+
+        location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.linear").c_str());
+        glUniform1f(location, pointLight.attenuationLinear);
+
+        location = glGetUniformLocation(program, ("lights[" + std::to_string(index) + "].m_attenuation.exponent").c_str());
+        glUniform1f(location, pointLight.attenuationExponent);
 
         return glGetError() == GL_NO_ERROR;
     }

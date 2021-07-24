@@ -14,10 +14,18 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
+struct Attenuation {
+    float constant;
+    float linear;
+    float exponent;
+};
+
 struct Light {
     vec3 m_position;
     vec3 m_color;
     float m_radius;
+    float m_intensity;
+    Attenuation m_attenuation;
 };
 
 const int NR_LIGHTS = 32;
@@ -46,8 +54,12 @@ void main() {
         float distance = length(lights[i].m_position - fragPos);
 
         if (distance < lights[i].m_radius) {
-            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color;
-            lighting += diffuse;
+            vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color * lights[i].m_intensity;
+            float attenuation = lights[i].m_attenuation.constant
+                              + lights[i].m_attenuation.linear * distance
+                              + lights[i].m_attenuation.exponent * distance * distance
+                              + 0.0001;
+            lighting += diffuse / attenuation;
         }
     }
 

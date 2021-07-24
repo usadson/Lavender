@@ -128,8 +128,8 @@ namespace gle {
 #endif
 
     bool
-    DeferredRenderer::setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept {
-        return m_lightingPassShader.setLight(index, position, color, radius);
+    DeferredRenderer::setPointLight(std::size_t index, const ecs::PointLight &pointLight) noexcept {
+        return m_lightingPassShader.setPointLight(index, pointLight);
     }
 
     bool

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "Source/ECS/Forward.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Types.hpp"
@@ -25,7 +26,7 @@ namespace gle {
         }
 
         [[nodiscard]] bool
-        setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept;
+        setPointLight(std::size_t index, const ecs::PointLight &pointLight) noexcept;
 
         [[nodiscard]] bool
         setup() noexcept;

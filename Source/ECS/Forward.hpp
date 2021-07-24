@@ -10,6 +10,7 @@ namespace ecs {
 
     class Entity;
     class EntityList;
+    struct PointLight;
     class Scene;
 
 } // namespace ecs

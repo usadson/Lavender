@@ -10,6 +10,7 @@
 #pragma once
 
 #include "Source/Base/Debug.hpp"
+#include "Source/ECS/Forward.hpp"
 #include "Source/OpenGL/Renderer/Renderer.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
@@ -40,7 +41,7 @@ namespace gle {
         render() noexcept override;
 
         [[nodiscard]] bool
-        setLight(std::size_t index, math::Vector3f position, math::Vector3f color, float radius) noexcept override;
+        setPointLight(std::size_t index, const ecs::PointLight &light) noexcept override;
 
         [[nodiscard]] bool
         setup() noexcept override;
