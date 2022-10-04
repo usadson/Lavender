@@ -9,6 +9,8 @@
 
 #include "Source/OpenGL/Shaders/LightingPassShader.hpp"
 
+#include <GL/glew.h>
+
 #include "Source/ECS/PointLight.hpp"
 
 namespace gle {

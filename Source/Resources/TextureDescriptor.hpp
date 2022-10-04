@@ -9,6 +9,9 @@
 namespace resources {
 
     class TextureDescriptor {
+    public:
+        virtual 
+        ~TextureDescriptor() noexcept = default;
     };
 
 } // namespace resources

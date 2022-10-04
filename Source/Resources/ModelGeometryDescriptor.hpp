@@ -9,6 +9,9 @@
 namespace resources {
 
     class ModelGeometryDescriptor {
+    public:
+        virtual
+        ~ModelGeometryDescriptor() noexcept = default;
     };
 
 } // namespace resources

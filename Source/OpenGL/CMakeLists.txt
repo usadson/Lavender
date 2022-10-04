@@ -11,6 +11,7 @@ add_library(OpenGLAPIEngine OBJECT
         GLCore.cpp
         ModelGeometryDescriptor.hpp
         GLTFLoader.cpp
+        OpenGLHelpers.cpp
         Renderer/DeferredRenderer.cpp
         Resources/GBuffer.cpp
         Resources/RenderQuad.cpp
@@ -23,6 +24,11 @@ add_library(OpenGLAPIEngine OBJECT
         Utils.cpp
 )
 
+if (ENABLE_WIN32)
+    target_sources(OpenGLAPIEngine PRIVATE Win32Glue.cpp)
+    target_compile_definitions(OpenGLAPIEngine PUBLIC LAVENDER_WIN32_SUPPORT_ENABLED)
+endif()
+
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     target_sources(OpenGLAPIEngine PRIVATE
             Shaders/Debug/LightingPassDebugShader.cpp
@@ -32,6 +38,7 @@ endif()
 target_link_libraries(OpenGLAPIEngine
   PRIVATE project_diagnostics
   PUBLIC GLEW::GLEW
+         glfw
          OpenGL::GL
          nlohmann_json::nlohmann_json)
 

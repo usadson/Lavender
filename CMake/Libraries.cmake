@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-option(USE_GLFW_SYSTEM "Use GLFW from the system libraries." OFF)
+option(USE_GLFW_SYSTEM "Use GLFW from the system libraries." ON)
 option(ENABLE_VULKAN "Enable Vulkan support." ON)
 
 set(VULKAN_VERSION "1.2" CACHE STRING "Vulkan Core Specification Revision")
@@ -33,6 +33,7 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 
 find_package(nlohmann_json REQUIRED)
+find_package(fmt REQUIRED)
 
 if (ENABLE_TESTING)
     find_package(GTest)

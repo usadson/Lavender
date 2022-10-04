@@ -33,6 +33,13 @@
  */
 #define VULKAN_HPP_ASSERT_ON_RESULT(...) ((void)0)
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <vulkan/vulkan.hpp>
+#pragma GCC diagnostic pop
+
+#define VKE_RESULT(code) static_cast<VkResult>(vk::Result::code)
 
 #endif // VULKAN_HPP

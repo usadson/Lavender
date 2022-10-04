@@ -19,34 +19,34 @@
 
 namespace vke {
 
-	class CustomDispatch {
-	public:
-        [[nodiscard]] vk::Result
-		vkCreateDebugUtilsMessengerEXT(
-				vk::Instance instance,
-				const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-				const VkAllocationCallbacks *pAllocator,
-				VkDebugUtilsMessengerEXT *pMessenger) const VULKAN_HPP_NOEXCEPT {
+    class CustomDispatch {
+    public:
+        [[nodiscard]] inline VkResult
+        vkCreateDebugUtilsMessengerEXT(vk::Instance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+                const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pMessenger) const VULKAN_HPP_NOEXCEPT {
             const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
                 instance.getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 
-			if (!func)
-				return vk::Result::eErrorExtensionNotPresent;
+            if (!func)
+                return VKE_RESULT(eErrorExtensionNotPresent);
 
-            return static_cast<vk::Result>(func(instance, pCreateInfo, pAllocator, pMessenger));
-		}
+            return func(instance, pCreateInfo, pAllocator, pMessenger);
+        }
 
-		void
-		vkDestroyDebugUtilsMessengerEXT(vk::Instance instance,
-				VkDebugUtilsMessengerEXT debugMessenger,
+        void
+        vkDestroyDebugUtilsMessengerEXT(vk::Instance instance, VkDebugUtilsMessengerEXT debugMessenger,
                 const VkAllocationCallbacks *pAllocator) const VULKAN_HPP_NOEXCEPT {
             const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-				instance.getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+                    instance.getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
 
-            if (func) {
+            if (func)
                 func(instance, debugMessenger, pAllocator);
-            }
         }
-	};
+
+        [[nodiscard]] inline constexpr std::size_t
+        getVkHeaderVersion() const {
+            return VK_HEADER_VERSION;
+        }
+    };
 
 } // namespace vke

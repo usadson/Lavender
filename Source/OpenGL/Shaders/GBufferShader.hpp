@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "Source/Math/Vector.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"

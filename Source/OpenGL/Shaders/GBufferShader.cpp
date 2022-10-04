@@ -9,6 +9,8 @@
 
 #include "Source/OpenGL/Shaders/GBufferShader.hpp"
 
+#include <GL/glew.h>
+
 namespace gle {
 
     bool
@@ -44,7 +46,7 @@ namespace gle {
         auto uniformLocation = glGetUniformLocation(m_program->programID(), "texAlbedo");
         glUniform1i(uniformLocation, 0); // texture bank 0
 
-        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_projection"));;
+        m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_projection"));
         m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_transform"));
         m_uniformView = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_view"));
 

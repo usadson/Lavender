@@ -2,6 +2,9 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*
+* Copyright (C) 2021 - 2022 Tristan Gerritsen <tristan@thewoosh.org>
+* All Rights Reserved.
  */
 
 #pragma once
@@ -11,10 +14,6 @@
 namespace base {
 
     struct Version {
-        std::uint8_t m_major{};
-        std::uint8_t m_minor{};
-        std::uint8_t m_patch{};
-
         template <typename T>
         [[nodiscard]] inline constexpr
         Version(T major, T minor, T patch) noexcept
@@ -44,6 +43,11 @@ namespace base {
         patch() const noexcept {
             return m_patch;
         }
+
+    private:
+        std::uint8_t m_major{};
+        std::uint8_t m_minor{};
+        std::uint8_t m_patch{};
     };
 
 } // namespace base

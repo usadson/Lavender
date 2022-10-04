@@ -17,6 +17,7 @@
 #include <cstdint>
 
 #include "Source/Base/Debug.hpp"
+#include "Source/Base/Library.hpp"
 #include "Source/ECS/Forward.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Input/Forward.hpp"

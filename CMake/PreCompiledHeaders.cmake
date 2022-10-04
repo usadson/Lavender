@@ -6,6 +6,7 @@ option(ENABLE_PCH "Enable PreCompiledHeaders" ON)
 
 if (ENABLE_PCH)
     add_library(PCH_Libraries INTERFACE)
+    target_link_libraries(PCH_Libraries INTERFACE GLEW::GLEW)
     target_precompile_headers(PCH_Libraries INTERFACE
             # C++ standard libraries
             <chrono>
@@ -15,11 +16,11 @@ if (ENABLE_PCH)
 
             # Libraries
             <GL/glew.h>
-
-            ${PCH_LIBRARIES_LIST})
+    )
 
     add_library(PCH_Vulkan INTERFACE)
     if (ENABLE_VULKAN)
+        target_link_libraries(PCH_Vulkan INTERFACE Vulkan::Vulkan)
         target_precompile_headers(PCH_Vulkan INTERFACE
                 "Source/Vulkan/IncludeVulkan.hpp")
     endif()

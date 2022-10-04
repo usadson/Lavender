@@ -120,8 +120,9 @@ namespace gle {
         io::FileInput input{path};
 
         if (input.error() != io::Error::NO_ERROR) {
-            std::printf("[GL] Shader: failed to loader shader \"%s\", error-code: %u\n", path.c_str(),
-                        static_cast<unsigned int>(input.error()));
+            const auto errorDescription = io::describeError(input.error());
+            std::printf("[GL] Shader: failed to loader shader \"%s\", error-code: \"%s\" in \"%s\"\n", path.c_str(),
+                        errorDescription.code().data(), errorDescription.section().data());
             return false;
         }
 

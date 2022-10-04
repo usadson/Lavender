@@ -53,6 +53,9 @@ void main() {
         vec3 lightDir = normalize(lights[i].m_position - fragPos);
         float distance = length(lights[i].m_position - fragPos);
 
+        // normal = vec3(0.03, 0.99, 0.47)
+        // normal = vec3(0.00, 0.08, 0.68)
+
         if (distance < lights[i].m_radius) {
             vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lights[i].m_color * lights[i].m_intensity;
             float attenuation = lights[i].m_attenuation.constant
