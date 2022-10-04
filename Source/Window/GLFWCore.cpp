@@ -240,12 +240,14 @@ namespace window {
         }
     }
 
-    bool
+    base::Error
     GLFWCore::initialize(GraphicsAPI::Name graphicsAPI) {
-        if (!glfwInit()) {
-            std::printf("GLFW: failed to init: %s\n", getGLFWError().data());
-            return false;
-        }
+        if (m_window != nullptr)
+            return base::Error::success();
+
+        base::FunctionErrorGenerator errors{"WindowAPI", "GLFWCore"};
+        if (!glfwInit())
+            return errors.error("glfwInit", getGLFWError());
 
         glfwWindowHint(GLFW_CLIENT_API, convertGraphicsAPINameToGLFWEnum(graphicsAPI));
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -257,6 +259,8 @@ namespace window {
         }
 
         m_window = glfwCreateWindow(1280, 720, "Lavender", nullptr, nullptr);
+        if (m_window == nullptr)
+            return errors.error("glfwCreateWindow", getGLFWError());
 
         if (graphicsAPI == GraphicsAPI::Name::OPENGL) {
             glfwMakeContextCurrent(m_window);
@@ -272,7 +276,7 @@ namespace window {
         glfwSetCursorPosCallback(m_window, reinterpret_cast<GLFWcursorposfun>(&mousePositionCallbackGLFW));
         glfwSetFramebufferSizeCallback(m_window, &resizeCallback);
 
-        return true;
+        return base::Error::success();
     }
 
     GLFWCore::~GLFWCore() {
@@ -335,8 +339,13 @@ namespace window {
 
     base::Error 
     GLFWCore::requestClose(window::CloseRequestedEvent::Reason reason) noexcept {
-        if (auto error = WindowAPI::requestClose(reason))
+        CloseRequestedEvent event{this, reason};
+
+        if (auto error = onCloseRequested.invoke(event))
             return error;
+
+        if (event.cancelStatus() != event::CancelStatus::NOT_CANCELLED)
+            return base::Error::success();
 
         glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         return base::Error::success();

@@ -50,6 +50,6 @@ class Lavender {
     update(float deltaTime) noexcept;
 
 public:
-    [[nodiscard]] base::ExitStatus
+    [[nodiscard]] base::Error
     run();
 };

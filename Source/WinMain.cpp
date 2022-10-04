@@ -49,12 +49,16 @@ int WINAPI WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance
 
     Lavender lavender{};
 
-    const auto status = lavender.run();
-    if (status == base::ExitStatus::SUCCESS)
-        return EXIT_SUCCESS;
+    if (auto error = lavender.run()) {
+        error.displayErrorMessageBox();
 
-    std::printf("Lavender: ExitStatus is %s (%zu)\n",
-        base::translateExitStatusToStringView(status).data(),
-        static_cast<std::size_t>(status));
-    return EXIT_FAILURE;
+        std::cout << "An error occurred in " << error.libraryName() << " in " << error.className() << "\n"
+                  << "\nDescription: " << error.description() << "\nAttempt: " << error.attemptedAction() << "\n"
+                  << "\nFile: " << error.sourceLocation().file_name() << ':' << error.sourceLocation().line()
+                  << "\nFunction: " << error.sourceLocation().function_name();
+
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

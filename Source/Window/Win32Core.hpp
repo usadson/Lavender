@@ -35,7 +35,7 @@ namespace window {
 
         ~Win32Core() override;
 
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         initialize(GraphicsAPI::Name graphicsAPI) override;
 
 #ifdef ENABLE_VULKAN
@@ -101,7 +101,7 @@ namespace window {
         onVisibilityOptionUpdated() noexcept override;
 
     private:
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         initializeAPI(GraphicsAPI::Name);
 
 #ifdef WIN32CORE_ENABLE_WINDOWS_FUNCTIONS

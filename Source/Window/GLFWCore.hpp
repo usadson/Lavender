@@ -24,7 +24,7 @@ namespace window {
         GLFWwindow *m_window{nullptr};
 
     public:
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         initialize(GraphicsAPI::Name graphicsAPI) override;
 
         ~GLFWCore() override;

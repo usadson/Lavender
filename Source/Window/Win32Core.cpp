@@ -313,16 +313,18 @@ namespace window {
     }
 #endif // ENABLE_VULKAN
 
-    bool
+    base::Error
     Win32Core::initialize(GraphicsAPI::Name graphicsAPI) {
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+
         static_cast<void>(graphicsAPI);
         if (m_data)
-            return true;
+            return base::Error::success();
 
         auto hInstance = platform::win32::g_hInstance;
         if (hInstance == nullptr) {
-            std::puts("[Win32Core] Cannot initialize WindowAPI since hInstance is null");
-            return false;
+            return errors.error("Initialize Win32-based WindowAPI", 
+                "Cannot initialize WindowAPI since hInstance is null. This error caused because the Win32Core is invoked, but not via the LavenderWin32 executable, which is using WinMain to instantiate the hInstance value.");
         }
 
         m_data = std::make_unique<Win32Data>();
@@ -346,12 +348,8 @@ namespace window {
         std::string windowTitle{base::About::applicationName};
 
         m_data->windowClassAtom = RegisterClass(&m_data->windowClass);
-        if (m_data->windowClassAtom == 0) {
-            auto error = GetLastError();
-            std::printf("[Win32Core] Failed to register window class: %lu\n", error);
-            DISPLAY_ERROR_MESSAGE("Failed to register window class");
-            return false;
-        }
+        if (m_data->windowClassAtom == 0)
+            return errors.fromWinError("Register window class");
 
         m_data->windowWidth = 1280;
         m_data->windowHeight = 720;
@@ -373,12 +371,8 @@ namespace window {
             this
         );
 
-        if (m_data->windowHandle == nullptr) {
-            auto error = GetLastError();
-//            fmt::print("[Win32Core] Failed to create window: {}\n", error);
-            std::printf("[Win32Core] Failed to create window: %lu\n", error);
-            return false;
-        }
+        if (m_data->windowHandle == nullptr)
+            return errors.fromWinError("CreateWindowEx");
 
         honorUserTheme();
         onVisibilityOptionUpdated();
@@ -389,25 +383,27 @@ namespace window {
             m_data->previousMouseY = point.y;
         }
 
-        if (!initializeAPI(graphicsAPI)) {
-            std::printf("[Win32Core] Failed to initialize Graphics API\n");
-            return false;
-        }
+        if (auto error = initializeAPI(graphicsAPI))
+            return error;
 
-        return true;
+        return base::Error::success();
     }
 
-    bool
+    base::Error
     Win32Core::initializeAPI(GraphicsAPI::Name graphicsAPI) {
         switch (graphicsAPI) {
             case GraphicsAPI::Name::OPENGL:
                 m_data->glContext = gle::win32::GLContext::createContext(m_data->windowHandle);
-                return m_data->glContext.has_value();
+                if (!m_data->glContext.has_value())
+                    return base::Error("WindowAPI", "Win32Core", "Create OpenGL context", "Failed to create OpenGL context");
+                return base::Error::success();
             case GraphicsAPI::Name::VULKAN:
-                return true;
+                // We don't have to do anything in here, since Vulkan has API's
+                // to connect the HWND to the VkSurface.
+                return base::Error::success();
         }
 
-        return false;
+        return base::Error("WindowAPI", "Win32Core", "Initialize GraphicsAPI", "Unknown API");
     }
 
     void
@@ -444,11 +440,15 @@ namespace window {
     }
 
     base::Error
-    Win32Core::requestClose(window::CloseRequestedEvent::Reason reason) noexcept { 
-        if (auto error = WindowAPI::requestClose(reason))
+    Win32Core::requestClose(window::CloseRequestedEvent::Reason reason) noexcept {
+        CloseRequestedEvent event{this, reason};
+        
+        if (auto error = onCloseRequested.invoke(event))
             return error;
 
-        m_shouldClose = true;
+        if (event.cancelStatus() == event::CancelStatus::NOT_CANCELLED)
+            m_shouldClose = true;
+        
         return base::Error::success();
     }
 
@@ -515,9 +515,7 @@ namespace window {
 
         switch (notification) {
             case WindowNotification::CLOSE: {
-                m_shouldClose = true;
-                window::CloseRequestedEvent event{this, window::CloseRequestedEvent::Reason::UNKNOWN};
-                if (auto error = onCloseRequested.invoke(event))
+                if (auto error = requestClose(window::CloseRequestedEvent::Reason::UNKNOWN))
                     error.displayErrorMessageBox();
                 break;
             }

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "Source/Event/Cancellable.hpp"
 #include "Source/Event/Event.hpp"
 #include "Source/Window/Options.hpp"
 
@@ -32,8 +33,15 @@ namespace window {
         WindowAPI *m_window;
     };
 
-    struct CloseRequestedEvent final 
-            : public WindowEvent {
+    //
+    // Fired when the system, user or application requests the window to be 
+    // closed.
+    //
+    // Cancelling this event means the window ignores the request.
+    //
+    struct CloseRequestedEvent final
+        : public WindowEvent
+        , public event::Cancellable {
         enum class Reason {
             UNKNOWN = 0,
             APPLICATION = 1,

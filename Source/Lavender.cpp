@@ -54,8 +54,9 @@ Lavender::renderFirstFrameAsLavenderIsLoading() noexcept {
     m_windowAPI->postLoop();
 }
 
-base::ExitStatus 
+base::Error
 Lavender::run() {
+    base::FunctionErrorGenerator errors{"LavenderCore", "Lavender"};
     auto previousFrameTime = std::chrono::steady_clock::now();
 
     m_camera = static_cast<interface::FreeCamera *>(
@@ -63,8 +64,9 @@ Lavender::run() {
 
 #ifdef LAVENDER_WIN32_SUPPORT_ENABLED
     m_windowAPI = std::make_unique<window::Win32Core>();
-    if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
+    if (auto error = m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
         std::puts("[Lavender] Failed to initialize Win32-based window");
+        error.displayErrorMessageBox();
         m_windowAPI = nullptr;
     }
 #endif
@@ -72,8 +74,8 @@ Lavender::run() {
     if (!m_windowAPI) {
         m_windowAPI = std::make_unique<window::GLFWCore>();
 
-        if (!m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
-            return base::ExitStatus::FAILED_INITIALISING_WINDOW_API;
+        if (auto error = m_windowAPI->initialize(GraphicsAPI::Name::OPENGL)) {
+            return error;
         }
     }
 
@@ -95,19 +97,16 @@ Lavender::run() {
 
     m_graphicsAPI = std::make_unique<gle::Core>(&m_scene, &m_controller, m_camera);
 //    m_graphicsAPI = std::make_unique<vke::Core>(&m_scene, &m_controller, m_camera);
-    if (!m_graphicsAPI->initialize(m_windowAPI.get())) {
-        return base::ExitStatus::FAILED_INITIALISING_GRAPHICS_API;
-    }
+    if (!m_graphicsAPI->initialize(m_windowAPI.get()))
+        return errors.error("Initialize GraphicsAPI", "Unknown Error (TODO)");
 
     m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
     renderFirstFrameAsLavenderIsLoading();
 
     {
         auto scene = m_graphicsAPI->loadGLTFScene("Resources/Assets/Models/Scene.gltf");
-        if (scene == nullptr) {
-            std::puts("[Lavender] Failed to load Scene.gltf!");
-            return base::ExitStatus::FAILED_LOADING_MODEL;
-        }
+        if (scene == nullptr)
+            return errors.error("Load Scene.gltf", "Unknown Error (TODO)");
 
         m_scene.import(std::move(*scene));
     }
@@ -146,10 +145,8 @@ Lavender::run() {
     
     renderFirstFrameAsLavenderIsLoading();
 
-    if (m_mainEntity == nullptr) {
-        std::puts("[GL] Failed to find main entity 'Dispatcher'");
-        return base::ExitStatus::FAILED_LOADING_MODEL;
-    }
+    if (m_mainEntity == nullptr)
+        return errors.error("Initializing entities in scene", "Failed to find main entity 'Dispatcher'");
 
 //    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
 //        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
@@ -195,7 +192,7 @@ Lavender::run() {
         m_windowAPI->postLoop();
     }
 
-    return base::ExitStatus::SUCCESS;
+    return base::Error::success();
 }
 
 void

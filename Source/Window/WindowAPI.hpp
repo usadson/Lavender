@@ -66,7 +66,7 @@ public:
     // Functions
     //
 
-    [[nodiscard]] virtual bool
+    [[nodiscard]] virtual base::Error
     initialize(GraphicsAPI::Name graphicsAPI) = 0;
 
     virtual
@@ -132,7 +132,7 @@ public:
     }
 
     [[nodiscard]] virtual base::Error
-    requestClose(window::CloseRequestedEvent::Reason reason) noexcept;
+    requestClose(window::CloseRequestedEvent::Reason reason) noexcept = 0;
 
     virtual void
     requestVSyncMode(bool enabled) noexcept = 0;
