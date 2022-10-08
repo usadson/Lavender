@@ -12,7 +12,7 @@ set(VULKAN_VERSION "1.2" CACHE STRING "Vulkan Core Specification Revision")
 if (ENABLE_VULKAN)
     add_compile_definitions(ENABLE_VULKAN)
 
-    find_package(Vulkan REQUIRED FATAL_ERROR)
+    find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
 endif()
 
@@ -28,7 +28,11 @@ endif()
 
 find_package(GLEW)
 if (NOT GLEW_FOUND)
-    CPMAddPackage("gh:nigels-com/glew")
+    CPMAddPackage(
+        NAME glew
+        GIT_TAG "9fb23c3e61cbd2d581e33ff7d8579b572b38ee26"
+        GITHUB_REPOSITORY "nigels-com/glew"
+    )
 endif()
 
 set(OpenGL_GL_PREFERENCE "GLVND")
@@ -36,12 +40,20 @@ find_package(OpenGL REQUIRED)
 
 find_package(nlohmann_json)
 if (NOT nlohmann_json_FOUND)
-    CPMAddPackage("gh:nlohmann/json")
+    CPMAddPackage(
+        NAME nlohmann_json
+        GIT_TAG "bc889afb4c5bf1c0d8ee29ef35eaaf4c8bef8a5d"
+        GITHUB_REPOSITORY "nlohmann/json"
+    )
 endif()
 
 find_package(fmt)
 if (NOT nlohmann_json_FOUND)
-    CPMAddPackage("gh:fmtlib/fmt")
+    CPMAddPackage(
+        NAME fmt
+        GIT_TAG "a33701196adfad74917046096bf5a2aa0ab0bb50"
+        GITHUB_REPOSITORY "fmtlib/fmt"
+    )
 endif()
 
 if (ENABLE_TESTING)
