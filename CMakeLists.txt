@@ -21,7 +21,7 @@ add_library(project_diagnostics INTERFACE)
 include(CMake/CompilerDiagnostics.cmake)
 set_project_diagnostics(project_diagnostics)
 
-option(ENABLE_TESTING "" ON)
+option(ENABLE_TESTING "" OFF)
 
 include(CMake/Libraries.cmake)
 include(CMake/PreCompiledHeaders.cmake)

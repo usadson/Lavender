@@ -61,7 +61,6 @@ endif()
 if (ENABLE_TESTING)
     find_package(GTest)
     if (NOT GTest_FOUND)
-        # Build GTest at compile time
-        add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/GoogleTest)
+        CPMAddPackage("gh:google/googletest@release-1.12.1")
     endif()
 endif()
