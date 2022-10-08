@@ -39,7 +39,10 @@ target_link_libraries(OpenGLAPIEngine
   PRIVATE project_diagnostics
   PUBLIC GLEW::GLEW
          glfw
-         OpenGL::GL
          nlohmann_json::nlohmann_json)
+
+if (OpenGL_Found)
+    target_link_libraries(OpenGLAPIEngine PUBLIC OpenGL::GL)
+endif()
 
 add_dependencies(OpenGLAPIEngine SPIRV_Shaders)

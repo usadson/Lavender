@@ -29,7 +29,7 @@ endif()
 find_package(GLEW)
 if (NOT GLEW_FOUND)
     CPMAddPackage(
-        NAME glew
+        NAME GLEW
         GIT_TAG "9fb23c3e61cbd2d581e33ff7d8579b572b38ee26"
         GITHUB_REPOSITORY "nigels-com/glew"
     )
