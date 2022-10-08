@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+include(CMake/CPM.cmake)
+
 option(USE_GLFW_SYSTEM "Use GLFW from the system libraries." ON)
 option(ENABLE_VULKAN "Enable Vulkan support." ON)
 
@@ -24,16 +26,23 @@ else()
     include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/glfw/include)
 endif()
 
-find_package(GLEW REQUIRED)
+find_package(GLEW)
+if (NOT GLEW_FOUND)
+    CPMAddPackage("gh:nigels-com/glew")
+endif()
 
-# We don't care which version to use, since we already use GLFW and GLEW for
-# OpenGL linking & extensions. This variable is set just to suppress the
-# diagnostic.
 set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 
-find_package(nlohmann_json REQUIRED)
-find_package(fmt REQUIRED)
+find_package(nlohmann_json)
+if (NOT nlohmann_json_FOUND)
+    CPMAddPackage("gh:nlohmann/json")
+endif()
+
+find_package(fmt)
+if (NOT nlohmann_json_FOUND)
+    CPMAddPackage("gh:fmtlib/fmt")
+endif()
 
 if (ENABLE_TESTING)
     find_package(GTest)
