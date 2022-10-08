@@ -35,8 +35,10 @@ if (NOT GLEW_FOUND)
     )
 endif()
 
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
+if (NOT DEFINED ENV{CI})
+    set(OpenGL_GL_PREFERENCE "GLVND")
+    find_package(OpenGL REQUIRED)
+endif()
 
 find_package(nlohmann_json)
 if (NOT nlohmann_json_FOUND)
