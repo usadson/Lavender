@@ -521,13 +521,17 @@ namespace window {
             }
             case WindowNotification::KEYBOARD_KEY_PRESSED: {
                 if (auto key = platform::win32::Input::translateKey(wParam)) {
-                    keyboardCallback()(input::KeyboardUpdate{key.value(), input::KeyboardAction::PRESS});
+                    input::KeyPressedEvent event{key.value()};
+                    if (auto error = onKeyPressed.invoke(event))
+                        error.displayErrorMessageBox();
                 }
                 break;
             }
             case WindowNotification::KEYBOARD_KEY_RELEASED: {
                 if (auto key = platform::win32::Input::translateKey(wParam)) {
-                    keyboardCallback()(input::KeyboardUpdate{key.value(), input::KeyboardAction::RELEASE});
+                    input::KeyReleasedEvent event{key.value()};
+                    if (auto error = onKeyReleased.invoke(event))
+                        error.displayErrorMessageBox();
                 }
                 break;
             }
@@ -607,6 +611,28 @@ namespace window {
                 }
                 break;
             }
+            case WindowNotification::SIZE: {
+                window::ResizeEvent::SizeType fromSize{
+                    static_cast<std::uint32_t>(m_data->windowWidth), 
+                    static_cast<std::uint32_t>(m_data->windowHeight)
+                };
+
+                window::ResizeEvent::SizeType toSize{
+                    LOWORD(lParam), 
+                    HIWORD(lParam)
+                };
+
+                m_data->windowWidth = toSize.width();
+                m_data->windowHeight = toSize.height();
+
+                if (!m_shouldClose) {
+                    window::ResizeEvent event{this, fromSize, toSize};
+                    if (auto error = onResize.invoke(event))
+                        error.displayErrorMessageBox();
+                }
+
+                break;
+            }
             case WindowNotification::NON_CLIENT_AREA_MOUSE_MOVE:
             case WindowNotification::NON_CLIENT_AREA_HIT_TEST: 
             case WindowNotification::SET_CURSOR:
@@ -622,7 +648,6 @@ namespace window {
             case WindowNotification::SIZING:
             case WindowNotification::MOVE:
             case WindowNotification::MOVING:
-            case WindowNotification::SIZE:
             case WindowNotification::PAINT:
             case WindowNotification::ACTIVATE_APP:
                 // ignore output spam

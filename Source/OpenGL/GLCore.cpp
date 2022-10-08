@@ -130,6 +130,11 @@ namespace gle {
         const auto size = m_windowAPI->queryFramebufferSize();
         onResize({size.x(), size.y()});
 
+        m_windowAPI->onResize += [&](window::ResizeEvent &event) -> base::Error { 
+            onResize(event.to());
+            return base::Error::success();
+        };
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         glFrontFace(GL_CW);

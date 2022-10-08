@@ -101,6 +101,7 @@ Lavender::run() {
         return errors.error("Initialize GraphicsAPI", "Unknown Error (TODO)");
 
     m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
+
     renderFirstFrameAsLavenderIsLoading();
 
     {
@@ -203,36 +204,57 @@ Lavender::setupController() noexcept {
         error.displayErrorMessageBox();
 #endif
 
-
-    m_windowAPI->registerKeyboardCallback([&](input::KeyboardUpdate update) {
-        switch (update.key) {
+    m_windowAPI->onKeyPressed += [&](input::KeyPressedEvent &event) -> base::Error { 
+        switch (event.key()) {
 #define LAVENDER_MAP_KEY(key, entry) \
-        case input::KeyboardKey::key: \
-            m_controller.entry = update.action != input::KeyboardAction::RELEASE; \
-            break;
+            case input::KeyboardKey::key: \
+                m_controller.entry = true; \
+                break;
             LAVENDER_MAP_KEY(W, moveForward)
             LAVENDER_MAP_KEY(S, moveBackward)
             LAVENDER_MAP_KEY(A, moveLeft)
             LAVENDER_MAP_KEY(D, moveRight)
             LAVENDER_MAP_KEY(SPACE, moveUp)
             LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
-        case input::KeyboardKey::NUMPAD9: {
-            auto pos = m_camera->position();
-            std::printf("[Lavender] Debug Position: %f %f %f\n", static_cast<double>(pos.x()),
-                static_cast<double>(pos.y()), static_cast<double>(pos.z()));
-            break;
-        }
-        case input::KeyboardKey::ESCAPE:
-            if (auto error = m_windowAPI->requestClose(window::CloseRequestedEvent::Reason::APPLICATION))
-                error.displayErrorMessageBox();
-            break;
-        default: break;
+            case input::KeyboardKey::ESCAPE:
+                if (auto error = m_windowAPI->requestClose(window::CloseRequestedEvent::Reason::APPLICATION))
+                    error.displayErrorMessageBox();
+                break;
+            case input::KeyboardKey::NUMPAD9: {
+                auto pos = m_camera->position();
+                std::printf("[Lavender] Debug Position: %f %f %f\n", static_cast<double>(pos.x()),
+                    static_cast<double>(pos.y()), static_cast<double>(pos.z()));
+                break;
+            }
+            default:
+                break;
         }
 
-#ifdef LAVENDER_BUILD_DEBUG
-        m_graphicsAPI->onDebugKey(update);
-#endif
-    });
+        return base::Error::success();
+    };
+
+    //m_graphicsAPI->onDebugKey(update);
+
+    m_windowAPI->onKeyReleased += [&](input::KeyReleasedEvent &event) -> base::Error {
+        switch (event.key()) {
+#undef LAVENDER_MAP_KEY
+#define LAVENDER_MAP_KEY(key, entry) \
+            case input::KeyboardKey::key: \
+                m_controller.entry = false; \
+                break;
+            LAVENDER_MAP_KEY(W, moveForward)
+            LAVENDER_MAP_KEY(S, moveBackward)
+            LAVENDER_MAP_KEY(A, moveLeft)
+            LAVENDER_MAP_KEY(D, moveRight)
+            LAVENDER_MAP_KEY(SPACE, moveUp)
+            LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
+            default:
+                break;
+        }
+
+        return base::Error::success();
+    };
+    
     m_windowAPI->registerMouseCallback([&](input::MouseUpdate update) {
         if (m_windowAPI->mouseGrabbed() == input::MouseGrabbed::NO) {
             if (update.button == input::MouseButton::LEFT && update.isPressed)

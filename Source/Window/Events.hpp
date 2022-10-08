@@ -9,8 +9,11 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "Source/Event/Cancellable.hpp"
 #include "Source/Event/Event.hpp"
+#include "Source/Math/Size2D.hpp"
 #include "Source/Window/Options.hpp"
 
 class WindowAPI;
@@ -77,6 +80,30 @@ namespace window {
         FocusLostEvent(WindowAPI *window) noexcept 
                 : WindowEvent(window) { 
         }
+    };
+
+    struct ResizeEvent final
+            : public WindowEvent {
+        using SizeType = math::Size2D<std::uint32_t>;
+
+        [[nodiscard]] inline constexpr 
+        ResizeEvent(WindowAPI *window, SizeType from, SizeType to) noexcept 
+                : WindowEvent(window), m_from(from), m_to(to) { 
+        }
+
+        [[nodiscard]] inline constexpr SizeType
+        from() const noexcept { 
+            return m_from;
+        }
+
+        [[nodiscard]] inline constexpr SizeType
+        to() const noexcept { 
+            return m_to;
+        }
+
+    private:
+        SizeType m_from;
+        SizeType m_to;
     };
 
     struct VisibilityChangedEvent final

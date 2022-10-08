@@ -60,7 +60,11 @@ public:
     event::EventHandler<window::CloseRequestedEvent> onCloseRequested{};
     event::EventHandler<window::FocusGainedEvent> onFocusGained{};
     event::EventHandler<window::FocusLostEvent> onFocusLost{};
+    event::EventHandler<window::ResizeEvent> onResize{};
     event::EventHandler<window::VisibilityChangedEvent> onVisibilityChanged{};
+
+    event::EventHandler<input::KeyPressedEvent> onKeyPressed{};
+    event::EventHandler<input::KeyReleasedEvent> onKeyReleased{};
 
     //
     // Functions
