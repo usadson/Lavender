@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (C) 2021 Tristan Gerritsen
+ * Copyright (C) 2021 - 2022 Tristan Gerritsen
  * All Rights Reserved.
  */
 
@@ -14,6 +14,7 @@
 #include "Source/OpenGL/Renderer/Renderer.hpp"
 #include "Source/OpenGL/Resources/GBuffer.hpp"
 #include "Source/OpenGL/Resources/RenderQuad.hpp"
+#include "Source/OpenGL/Shaders/AnimatedGBufferShader.hpp"
 #include "Source/OpenGL/Shaders/GBufferShader.hpp"
 #include "Source/OpenGL/Shaders/LightingPassShader.hpp"
 
@@ -31,8 +32,8 @@ namespace gle {
                 : Renderer(core) {
         }
 
-        AttributeLocations
-        attributeLocations() noexcept override;
+        [[nodiscard]] AttributeLocations
+        attributeLocations(CapabilitiesRequired) noexcept override;
 
         void
         onResize(math::Size2D<std::uint32_t>) noexcept override;
@@ -43,7 +44,7 @@ namespace gle {
         [[nodiscard]] bool
         setPointLight(std::size_t index, const ecs::PointLight &light) noexcept override;
 
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         setup() noexcept override;
 
         void
@@ -58,6 +59,7 @@ namespace gle {
 
         GBuffer m_gBuffer;
 
+        AnimatedGBufferShader m_animatedGBufferShader{};
         GBufferShader m_gBufferShader{};
         LightingPassShader m_lightingPassShader{};
 

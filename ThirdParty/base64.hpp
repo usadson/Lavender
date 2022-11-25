@@ -65,8 +65,9 @@ namespace base64 {
         return ret;
     }
 
+    template<typename T>
     [[nodiscard]] inline static bool
-    decode(std::string_view input, std::string &out) {
+    decode(std::string_view input, T &out) {
         static constexpr unsigned char kDecodingTable[] = {64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
             64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
             64, 62, 64, 64, 64, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64, 64, 0, 1, 2, 3, 4,

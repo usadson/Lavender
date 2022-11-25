@@ -38,13 +38,18 @@ namespace gle {
 
         if (!resolveAttributeLocation("position", &m_attribPosition)
                 || !resolveAttributeLocation("vertex_normal", &m_attribNormal)
-                || !resolveAttributeLocation("vertex_textureCoordinates", &m_attribTextureCoordinates))
+                || !resolveAttributeLocation("vertex_textureCoordinates", &m_attribTextureCoordinates)
+                || !resolveAttributeLocation("vertex_tangent", &m_attribTangent)
+                || !resolveAttributeLocation("vertex_bitangent", &m_attribBitangent))
             return false;
 
         glUseProgram(m_program->programID());
 
         auto uniformLocation = glGetUniformLocation(m_program->programID(), "texAlbedo");
         glUniform1i(uniformLocation, 0); // texture bank 0
+
+        uniformLocation = glGetUniformLocation(m_program->programID(), "texNormalMap");
+        glUniform1i(uniformLocation, 1); // texture bank 1
 
         m_uniformProjection = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_projection"));
         m_uniformTransformation = UniformMatrix4(glGetUniformLocation(m_program->programID(), "u_transform"));

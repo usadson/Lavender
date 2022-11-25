@@ -8,9 +8,9 @@
 *
 * Vulkan and the Vulkan logo are registered trademarks of the Khronos Group
 * Inc.
-*
-* vke is an abbreviation for VulKan Engine.
 */
+
+// #define WIN32_DEBUG_PRINT_UNKNOWN_WINDOW_NOTIFICATIONS
 
 #undef UNICODE
 #undef _UNICODE
@@ -24,11 +24,17 @@
 #include <windows.h>
 #include <windowsx.h>
 
+#include <shellapi.h>
+
+#include "Source/Platform/Win32/DropTarget.hpp"
+
 #include "Win32Core.hpp"
 
 #include <array>
+#include <map>
 #include <optional>
 #include <source_location>
+#include <sstream>
 
 #include <cassert>
 #include <cstdio>
@@ -47,6 +53,7 @@
 
 #include "Source/Base/About.hpp"
 #include "Source/Base/Error.hpp"
+#include "Source/Input/StandardCursor.hpp"
 #include "Source/OpenGL/Win32Glue.hpp"
 #include "Source/Platform/WinPlatform.hpp"
 #include "Source/Platform/Win32/ConsoleManager.hpp"
@@ -55,7 +62,17 @@
 #include "Source/Platform/Win32/UndocumentedAPIs.hpp"
 #include "Source/Platform/Win32/UWP.hpp"
 
+#include "Source/Platform/Win32/DropTarget.hpp"
+
+#include <winsock2.h>
+
 #define DISPLAY_ERROR_MESSAGE(description) displayErrorMessage(description, std::source_location::current())
+
+namespace platform::win32 {
+
+    volatile HWND g_mainWindow{ nullptr };
+
+} // namespace platform::win32
 
 namespace window {
 
@@ -219,7 +236,12 @@ namespace window {
         int windowWidth{};
         int windowHeight{};
 
+        std::map<input::KeyboardKey, bool> keyboardKeyStates{};
+
         std::optional<IconData> iconData{};
+#ifdef LAVENDER_WIN32_HAS_OLE
+        platform::win32::DropTarget dropTarget{};
+#endif
 
         ~Win32Data() {
             if (platform::win32::g_hInstance == nullptr) {
@@ -228,6 +250,8 @@ namespace window {
             }
 
             if (windowHandle != nullptr) {
+                if (platform::win32::g_mainWindow == windowHandle)
+                    platform::win32::g_mainWindow = nullptr;
                 CloseWindow(windowHandle);
                 DestroyWindow(windowHandle);
             }
@@ -279,7 +303,7 @@ namespace window {
         return DefWindowProc(windowHandle, uMsg, wParam, lParam);
     }
 
-    Win32Core::Win32Core() {
+    Win32Core::Win32Core(){
         std::puts("[Win32Core] Initialized.");
     }
 
@@ -312,6 +336,37 @@ namespace window {
         return {s_requiredVulkanExtensions.data(), std::uint32_t(s_requiredVulkanExtensions.size())};
     }
 #endif // ENABLE_VULKAN
+
+    base::Error
+    Win32Core::enableDragAndDrop(WindowDragAndDropOption option) noexcept {
+        if (option == m_dragAndDropOption)
+            return base::Error::success();
+
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+        if (!m_data || !m_data->windowHandle)
+            return errors.error("Enable Drag & Drop", "Cannot enable this feature before window initialization.");
+
+#ifdef LAVENDER_WIN32_HAS_OLE
+        if (m_dragAndDropMethod == Win32DragDropMethod::OLE) {
+            if (option == WindowDragAndDropOption::DISABLED) {
+                return oleDragAndDropDisable();
+            }
+
+            if (auto error = oleDragAndDropEnable()) {
+                error.displayErrorMessageBox();
+
+                // OLE method doesn't work, falling back to WM_DROPFILES
+                m_dragAndDropMethod = Win32DragDropMethod::DROPFILES;
+            }
+        }
+#endif
+
+        BOOL enable = option == WindowDragAndDropOption::ENABLED;
+        DragAcceptFiles(m_data->windowHandle, enable);
+
+        m_dragAndDropOption = option;
+        return base::Error::success();
+    }
 
     base::Error
     Win32Core::initialize(GraphicsAPI::Name graphicsAPI) {
@@ -374,8 +429,14 @@ namespace window {
         if (m_data->windowHandle == nullptr)
             return errors.fromWinError("CreateWindowEx");
 
+        platform::win32::g_mainWindow = m_data->windowHandle;
+
+        if (!m_currentStandardCursor.has_value())
+            setCursor(input::StandardCursor::ARROW).displayErrorMessageBox();
+
         honorUserTheme();
         onVisibilityOptionUpdated();
+        UpdateWindow(m_data->windowHandle);
 
         POINT point;
         if (GetCursorPos(&point) && ScreenToClient(m_data->windowHandle, &point)) {
@@ -383,8 +444,31 @@ namespace window {
             m_data->previousMouseY = point.y;
         }
 
+#ifdef LAVENDER_WIN32_HAS_OLE
+        m_dragAndDropMethod = Win32DragDropMethod::OLE;
+#else
+        m_dragAndDropMethod = Win32DragDropMethod::DROPFILES;
+#endif
+
         if (auto error = initializeAPI(graphicsAPI))
             return error;
+
+        
+        m_data->dropTarget.onDragEnter += [&](input::DragEnterEvent &event) {
+            return onDragEnter.invoke(event);
+        };
+
+        m_data->dropTarget.onDragOver += [&](input::DragOverEvent &event) {
+            return onDragOver.invoke(event);
+        };
+
+        m_data->dropTarget.onDrop += [&](input::DropEvent &event) {
+            return onDrop.invoke(event);
+        };
+
+        m_data->dropTarget.onDragLeave += [&](input::DragLeaveEvent &event) {
+            return onDragLeave.invoke(event);
+        };
 
         return base::Error::success();
     }
@@ -405,6 +489,73 @@ namespace window {
 
         return base::Error("WindowAPI", "Win32Core", "Initialize GraphicsAPI", "Unknown API");
     }
+
+#ifdef LAVENDER_WIN32_HAS_OLE
+    base::Error
+    Win32Core::oleDragAndDropEnable() const noexcept {
+        if (auto error = oleInitialize())
+            return error;
+
+        base::FunctionErrorGenerator errors{"WindowsAPI", "Win32Core"};
+
+        switch (RegisterDragDrop(m_data->windowHandle, &m_data->dropTarget)) {
+            case S_OK:
+                return base::Error::success();
+            case DRAGDROP_E_INVALIDHWND:
+                return errors.error(
+                    "RegisterDragDrop", "DRAGDROP_E_INVALIDHWND: Invalid handle returned in the hwnd parameter.");
+            case DRAGDROP_E_ALREADYREGISTERED:
+                return errors.error("RegisterDragDrop",
+                    "DRAGDROP_E_ALREADYREGISTERED: The specified window has already been registered as a drop target.");
+            case E_OUTOFMEMORY:
+                return errors.error("RegisterDragDrop", "E_OUTOFMEMORY: Insufficient memory for the operation.");
+            default:
+                return errors.error("RegisterDragDrop", "Unknown Error!");
+        }
+    }
+
+    base::Error
+    Win32Core::oleDragAndDropDisable() const noexcept {
+        base::FunctionErrorGenerator errors{"WindowsAPI", "Win32Core"};
+
+        switch (RevokeDragDrop(m_data->windowHandle)) {
+            case S_OK:
+                return base::Error::success();
+            case DRAGDROP_E_INVALIDHWND:
+                return errors.error(
+                    "RevokeDragDrop", "DRAGDROP_E_INVALIDHWND: Invalid handle returned in the hwnd parameter.");
+            case DRAGDROP_E_NOTREGISTERED:
+                return errors.error("RevokeDragDrop", "DRAGDROP_E_NOTREGISTERED: An attempt was made to revoke a drop target that has not been registered.");
+            case E_OUTOFMEMORY:
+                return errors.error("RevokeDragDrop", "E_OUTOFMEMORY: There is insufficient memory for the operation.");
+            default:
+                return errors.error("RevokeDragDrop", "Unknown Error!");
+        }
+    }
+
+    base::Error
+    Win32Core::oleInitialize() noexcept {
+        auto result = OleInitialize(nullptr);
+
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+        switch (result) {
+            case S_OK:
+            case S_FALSE:
+                return base::Error::success();
+            case OLE_E_WRONGCOMPOBJ:
+                return errors.error("OleInitialize",
+                    "OLE_E_WRONGCOMPOBJ: The versions of COMPOBJ.DLL and OLE2.DLL on your machine are incompatible with each other.");
+            case RPC_E_CHANGED_MODE:
+                return errors.error("OleInitialize",
+                    "RPC_E_CHANGED_MODE: A previous call to CoInitializeEx specified the concurrency model for this "
+                    "apartment as multithread apartment (MTA). This could also mean that a change from neutral "
+                    "threaded apartment to single threaded apartment occurred.");
+            default:
+                return errors.error("OleInitialize", "Unknown error");
+        }
+    }
+
+#endif // LAVENDER_WIN32_HAS_OLE_DND
 
     void
     Win32Core::preLoop() {
@@ -457,6 +608,27 @@ namespace window {
         static_cast<void>(enabled);
     }
 
+    base::Error
+    Win32Core::setCursor(input::StandardCursor standardCursor) noexcept {
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+
+        const char *cursorName = translateStandardCursorToCursorName(standardCursor);
+        if (cursorName == nullptr)
+            return errors.error("Translate input::StandardCursor to cursorName for LoadCursorA", "Unexpected value");
+
+        auto cursor = LoadCursorA(nullptr, cursorName);
+        if (cursor == nullptr)
+            return errors.fromWinError("LoadCursorA");
+
+        SetCursor(cursor);
+        m_currentStandardCursor = standardCursor;
+
+        if (m_mouseGrabbed == input::MouseGrabbed::YES)
+            ShowCursor(FALSE);
+
+        return base::Error::success();
+    }
+
     void
     Win32Core::setMouseGrabbed(input::MouseGrabbed mouseGrabbed) noexcept {
         const bool wasGrabbed = m_mouseGrabbed == input::MouseGrabbed::YES;
@@ -475,11 +647,37 @@ namespace window {
                 SetCapture(m_data->windowHandle);
                 if (GetCapture() != m_data->windowHandle)
                     DISPLAY_ERROR_MESSAGE("Failed to set mouse grabbed");
-                else
+                else {
                     ShowCursor(false);
+                    putMouseCursorAtCenterOfWindow();
+                }
                 break;
         }
     }
+
+    base::Error
+    Win32Core::setTitle(std::string &&title) noexcept {
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+        if (!m_data || !m_data->windowHandle)
+            return errors.error("Access window data", "Not initialized.");
+
+        if (!SetWindowTextA(m_data->windowHandle, title.c_str()))
+            return errors.fromWinError("Set window title");
+
+        return base::Error::success();
+    }
+
+    void Win32Core::showMessageBox(std::string_view inTitle, std::string_view inMessage) noexcept {
+        std::thread([this, title = std::string(inTitle), message = std::string(inMessage)] {
+            MessageBoxA(
+                nullptr, 
+                message.c_str(), 
+                title.c_str(), 
+                MB_ICONINFORMATION | MB_OK
+            );
+        }).detach();
+    }
+
 
     //
     // Private Functions
@@ -507,6 +705,30 @@ namespace window {
 
         LocalFree(lpMessage);
     }
+
+    std::optional<LRESULT>
+    Win32Core::handleDropFilesNotification(HDROP drop) noexcept {
+        if (m_dragAndDropOption != WindowDragAndDropOption::ENABLED
+                    || m_dragAndDropMethod != Win32DragDropMethod::DROPFILES)
+            return std::nullopt;
+
+        base::FunctionErrorGenerator errors{"WindowAPI", "Win32Core"};
+
+        std::array<char, 128> buffer{};
+
+        if (DragQueryFileA(drop, 0, buffer.data(), static_cast<UINT>(buffer.size())) == 0) {
+            errors.fromWinError("DragQueryFileA").displayErrorMessageBox();
+            return std::nullopt;
+        }
+
+        std::string_view fileName{buffer.data()};
+        if (!fileName.ends_with(".gltf")) {
+            
+        }
+        
+        return 0;
+    }
+
 
     std::optional<LRESULT>
     Win32Core::handleWindowMessage(platform::win32::WindowNotification notification,
@@ -573,7 +795,7 @@ namespace window {
                 break;
             }
             case WindowNotification::SET_FOCUS: {
-                window::FocusGainedEvent event{this};
+                FocusGainedEvent event{this};
                 if (auto error = onFocusGained.invoke(event))
                     error.displayErrorMessageBox();
                 break;
@@ -581,9 +803,18 @@ namespace window {
             case WindowNotification::KILL_FOCUS: {
                 setMouseGrabbed(input::MouseGrabbed::NO);
 
-                window::FocusLostEvent event{this};
+                FocusLostEvent event{this};
                 if (auto error = onFocusLost.invoke(event))
                     error.displayErrorMessageBox();
+                break;
+            }
+            case WindowNotification::LOST_MOUSE_CAPTURE:
+                setMouseGrabbed(input::MouseGrabbed::NO);
+                break;
+            case WindowNotification::MOUSE_HORIZONTAL_WHEEL: {
+                /*onHorizontalScroll.invoke(input::ScrollEvent{
+                    .delta = static_cast<double>() / SCROLL
+                    })*/
                 break;
             }
             case WindowNotification::SHOW_WINDOW: {
@@ -598,11 +829,11 @@ namespace window {
                 break;
             }
             case WindowNotification::SYSTEM_COMMAND:
-                if (auto result = handleSystemCommand(static_cast<platform::win32::SystemCommand>(wParam), lParam))
+                if (auto result = handleSystemCommand(static_cast<SystemCommand>(wParam), lParam))
                     return result.value();
                 break;
             case WindowNotification::KEYBOARD_SYSTEM_KEY_PRESSED: {
-                if (auto key = platform::win32::Input::translateKey(wParam)) { 
+                if (auto key = Input::translateKey(wParam)) { 
                     if (key.value() == input::KeyboardKey::F4) {
                         window::CloseRequestedEvent event{this, window::CloseRequestedEvent::Reason::SHORTCUT_ALT_F4_PRESSED};
                         if (auto error = onCloseRequested.invoke(event))
@@ -612,15 +843,18 @@ namespace window {
                 break;
             }
             case WindowNotification::SIZE: {
-                window::ResizeEvent::SizeType fromSize{
+                ResizeEvent::SizeType fromSize{
                     static_cast<std::uint32_t>(m_data->windowWidth), 
                     static_cast<std::uint32_t>(m_data->windowHeight)
                 };
 
-                window::ResizeEvent::SizeType toSize{
+                ResizeEvent::SizeType toSize{
                     LOWORD(lParam), 
                     HIWORD(lParam)
                 };
+
+                if (toSize.width() == 0 || toSize.height() == 0)
+                    break;
 
                 m_data->windowWidth = toSize.width();
                 m_data->windowHeight = toSize.height();
@@ -631,6 +865,25 @@ namespace window {
                         error.displayErrorMessageBox();
                 }
 
+                break;
+            }
+            case WindowNotification::DROP_FILES:
+                if (auto result = handleDropFilesNotification(reinterpret_cast<HDROP>(wParam)))
+                    return result.value();
+                break;
+            case WindowNotification::CANCEL_MODE:
+                m_mouseGrabbed = input::MouseGrabbed::NO;
+                break;
+            case WindowNotification::ACTIVATE: {
+                if (wParam == WA_INACTIVE) {
+                    onDeactivate();
+                }
+                break;
+            }
+            case WindowNotification::UDP_SOCKET_MESSAGE: {
+                auto event = WSAGETSELECTEVENT(lParam);
+                auto error = WSAGETSELECTERROR(wParam);
+                std::printf("[UDP_SOCKET_MESSAGE] event=%hu error=%hu\n", event, error);
                 break;
             }
             case WindowNotification::NON_CLIENT_AREA_MOUSE_MOVE:
@@ -650,15 +903,19 @@ namespace window {
             case WindowNotification::MOVING:
             case WindowNotification::PAINT:
             case WindowNotification::ACTIVATE_APP:
+            case WindowNotification::GET_ICON:
+            case WindowNotification::INPUT_METHOD_EDITOR_SET_CONTEXT:
                 // ignore output spam
                 break;
             default:
+#ifdef WIN32_DEBUG_PRINT_UNKNOWN_WINDOW_NOTIFICATIONS
                 std::printf("notif %x or ", static_cast<int>(notification));
                 if (auto it = m_data->notificationNames.find(notification); it != m_data->notificationNames.end())
                     std::puts(&*it->second.enumeration.begin());
                 else {
                     std::printf("wParam=%llu lParam=%llu\n", std::size_t(wParam), std::size_t(lParam));
                 }
+#endif // WIN32_DEBUG_PRINT_UNKNOWN_WINDOW_NOTIFICATIONS
                 break;
         }
 
@@ -674,6 +931,9 @@ namespace window {
         const auto prevX = m_data->previousMouseX;
         const auto prevY = m_data->previousMouseY;
 
+        if (prevX == x && prevY == y)
+            return;
+
         if (m_mouseGrabbed == input::MouseGrabbed::YES) {
             int deltaX = x - m_data->windowWidth / 2;
             int deltaY = y - m_data->windowHeight / 2;
@@ -681,13 +941,7 @@ namespace window {
             moveX = static_cast<float>(-deltaX) * m_data->mouseXFactor;
             moveY = static_cast<float>(-deltaY) * m_data->mouseYFactor,
 
-            m_data->previousMouseX = m_data->windowWidth / 2;
-            m_data->previousMouseY = m_data->windowHeight / 2;
-
-            POINT newCursorPosition{m_data->previousMouseX, m_data->previousMouseY};
-            ClientToScreen(m_data->windowHandle, &newCursorPosition);
-            auto result = SetCursorPos(newCursorPosition.x, newCursorPosition.y);
-            assert(result);
+            putMouseCursorAtCenterOfWindow();
         } else {
             moveX = static_cast<float>(x - prevX) * m_data->mouseXFactor;
             moveY = static_cast<float>(y - prevY) * m_data->mouseYFactor;
@@ -732,9 +986,24 @@ namespace window {
 
         DwmSetWindowAttribute(m_data->windowHandle, 
             static_cast<DWORD>(platform::win32::dwm::WindowAttribute::USE_IMMERSIVE_DARK_MODE), 
-            &value, 
+            &value,
             sizeof(value)
         );
+    }
+
+    void
+    Win32Core::onDeactivate() noexcept {
+        if (!m_data)
+            return;
+
+        for (auto &entry : m_data->keyboardKeyStates) {
+            if (entry.second) {
+                input::KeyReleasedEvent event{entry.first};
+                onKeyReleased.invoke(event).displayErrorMessageBox();
+            }
+
+            entry.second = false;
+        }
     }
 
     void 
@@ -801,8 +1070,21 @@ namespace window {
                 break;
             case WindowVisibilityOption::SHOW:
                 ShowWindow(m_data->windowHandle, SW_SHOWNORMAL);
+                if (m_currentStandardCursor)
+                    static_cast<void>(setCursor(m_currentStandardCursor.value()));
                 break;
         }
+    }
+
+    void
+    Win32Core::putMouseCursorAtCenterOfWindow() noexcept {
+        m_data->previousMouseX = m_data->windowWidth / 2;
+        m_data->previousMouseY = m_data->windowHeight / 2;
+
+        POINT newCursorPosition{m_data->previousMouseX, m_data->previousMouseY};
+        ClientToScreen(m_data->windowHandle, &newCursorPosition);
+        
+        assert(SetCursorPos(newCursorPosition.x, newCursorPosition.y));
     }
 
     [[nodiscard]] bool 
@@ -825,5 +1107,26 @@ namespace window {
         assert(false);
         return false;
     }
+
+    const char *
+    Win32Core::translateStandardCursorToCursorName(input::StandardCursor standardCursor) noexcept {
+        switch (standardCursor) {
+            case input::StandardCursor::ARROW:
+                return IDC_ARROW;
+            case input::StandardCursor::ARROW_WITH_HOURGLASS:
+                    return IDC_APPSTARTING;
+            case input::StandardCursor::HAND:
+                return IDC_HAND;
+            case input::StandardCursor::HELP:
+                return IDC_HELP;
+            case input::StandardCursor::HOURGLASS:
+                return IDC_WAIT;
+            case input::StandardCursor::I_BEAM:
+                return IDC_IBEAM;
+        }
+
+        return nullptr;
+    }
+
 
 } // namespace window

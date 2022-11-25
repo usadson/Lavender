@@ -44,6 +44,8 @@ if (NOT nlohmann_json_FOUND)
     CPMAddPackage("gh:fmtlib/fmt")
 endif()
 
+CPMAddPackage("gh:zeux/pugixml@1.13")
+
 if (ENABLE_TESTING)
     find_package(GTest)
     if (NOT GTest_FOUND)

@@ -66,6 +66,9 @@ namespace window {
             return base::Error::success();
         }
 
+        [[nodiscard]] base::Error
+        setTitle(std::string &&) noexcept override;
+
         [[nodiscard]] bool
         shouldClose() override;
 

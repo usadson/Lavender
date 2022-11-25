@@ -9,11 +9,13 @@
 #include <array>
 
 #include <cmath>
-#include <cstdint>
 
 #include "Source/Math/Math.hpp"
 
 namespace math {
+
+    template <typename T, typename F>
+    concept Convertibles = std::is_same_v<T, F>;
 
     template <typename Type, std::size_t Dimensions>
         requires(Dimensions >= 2)
@@ -27,10 +29,10 @@ namespace math {
         Vector &operator=(Vector &&) = default;
         Vector &operator=(const Vector &) = default;
 
-        template <typename... CType>
+        template <Convertibles<Type>... CType>
         [[nodiscard]] inline constexpr
         Vector(CType... values) noexcept
-            : m_data{(values)...} {
+                : m_data{values...} {
         }
 
         [[nodiscard]] inline constexpr Type &
@@ -75,6 +77,12 @@ namespace math {
         w() const noexcept
                 requires(Dimensions >= 4) {
             return m_data[3];
+        }
+
+        template<typename...ConversionTypes>
+        [[nodiscard]] inline static constexpr Vector<Type, Dimensions>
+        from(ConversionTypes...conversions) {
+            return Vector{static_cast<Type>(conversions)...};
         }
 
         [[nodiscard]] inline Vector<Type, Dimensions>
@@ -191,10 +199,53 @@ namespace math {
             return {x() * cos - y() * sin,
                     x() * sin + y() * cos};
         }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator-(const Vector<Type, Dimensions> &other) const noexcept {
+            return subtract(other);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator+(const Vector<Type, Dimensions> &other) const noexcept {
+            return add(other);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator*(const Vector<Type, Dimensions> &other) const noexcept {
+            return mul(other);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator*(const Type &other) const noexcept {
+            return mul(other);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator/(const Vector<Type, Dimensions> &other) const noexcept {
+            return div(other);
+        }
+
+        [[nodiscard]] inline Vector<Type, Dimensions>
+        operator/(const Type &other) const noexcept {
+            return div(other);
+        }
+
+        [[nodiscard]] constexpr Vector<Type, 2>
+        xy() const noexcept {
+            return {x(), y()};
+        }
+
+        [[nodiscard]] constexpr Vector<Type, 3>
+        xyz() const noexcept {
+            return {x(), y(), z()};
+        }
     };
 
-    using Vector2u = Vector<std::uint32_t, 2>;
+    using Vector2i = Vector<int, 2>;
+    using Vector2u = Vector<unsigned int, 2>;
+    using Vector2f = Vector<float, 2>;
     using Vector3f = Vector<float, 3>;
+    using Vector4f = Vector<float, 4>;
 
     [[nodiscard]] Vector3f
     rotateV3f(Vector3f input, float angle, Vector3f axis) noexcept;

@@ -19,6 +19,7 @@ namespace gle {
          * blindly call glDeleteBuffers on all of them.
          */
 
+        GLsizei m_vertexCount{};
         GLuint m_vao{};
         GLuint m_vbo{};
         GLuint m_ebo{};
@@ -28,16 +29,25 @@ namespace gle {
 
         GLenum m_indexType{};
 
+        GLuint m_tangentBufferObject{};
+        GLuint m_bitangentBufferObject{};
+
     public:
         [[nodiscard]] inline constexpr
-        ModelGeometryDescriptor(GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLuint nbo, GLsizei indexCount, GLenum indexType) noexcept
-                : m_vao(vao)
+        ModelGeometryDescriptor(GLsizei vertexCount, GLuint vao, GLuint vbo, GLuint ebo, GLuint tbo, GLuint nbo, GLsizei indexCount, GLenum indexType) noexcept
+                : m_vertexCount(vertexCount)
+                , m_vao(vao)
                 , m_vbo(vbo)
                 , m_ebo(ebo)
                 , m_tbo(tbo)
                 , m_nbo(nbo)
                 , m_indexCount(indexCount)
                 , m_indexType(indexType) {
+        }
+
+        [[nodiscard]] inline constexpr GLuint
+        bitangentBufferObject() const noexcept {
+            return m_bitangentBufferObject;
         }
 
         [[nodiscard]] inline constexpr GLuint
@@ -60,6 +70,17 @@ namespace gle {
             return m_nbo;
         }
 
+        inline constexpr void
+        setTangentAndBitangentBufferObjects(GLuint tangentBufferObject, GLuint bitangentBufferObject) noexcept {
+            m_tangentBufferObject = tangentBufferObject;
+            m_bitangentBufferObject = bitangentBufferObject;
+        }
+
+        [[nodiscard]] inline constexpr GLuint
+        tangentBufferObject() const noexcept {
+            return m_tangentBufferObject;
+        }
+
         [[nodiscard]] inline constexpr GLuint
         tbo() const noexcept {
             return m_tbo;
@@ -73,6 +94,11 @@ namespace gle {
         [[nodiscard]] inline constexpr GLuint
         vbo() const noexcept {
             return m_vbo;
+        }
+
+        [[nodiscard]] inline constexpr GLsizei
+        vertexCount() const noexcept {
+            return m_vertexCount;
         }
     };
 

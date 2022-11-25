@@ -21,6 +21,9 @@
 #include "Source/Math/Size2D.hpp"
 #include "Source/OpenGL/ModelGeometryDescriptor.hpp"
 #include "Source/OpenGL/Renderer/Renderer.hpp"
+#include "Source/OpenGL/Renderer/SkyBoxRenderer.hpp"
+#include "Source/OpenGL/Resources/SkinDescriptor.hpp"
+#include "Source/OpenGL/Resources/SkyboxDescriptor.hpp"
 #include "Source/OpenGL/Shaders/ShaderProgram.hpp"
 #include "Source/OpenGL/Shaders/Uniform.hpp"
 #include "Source/OpenGL/TextureDescriptor.hpp"
@@ -35,8 +38,11 @@ namespace gle {
         std::vector<std::unique_ptr<ModelGeometryDescriptor>> m_geometryDescriptors{};
         std::vector<std::unique_ptr<TextureDescriptor>> m_textureDescriptors{};
         std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
+        std::vector<std::unique_ptr<SkyboxDescriptor>> m_skyBoxDescriptors{};
+        std::vector<std::unique_ptr<SkinDescriptor>> m_skinDescriptor{};
 
         std::unique_ptr<Renderer> m_renderer{};
+        std::unique_ptr<SkyBoxRenderer> m_skyBoxRenderer{};
 
         [[nodiscard]] std::optional<unsigned int>
         createElementBuffer(const std::vector<resources::ModelGeometry::IndexType> &) const noexcept;
@@ -47,7 +53,7 @@ namespace gle {
         [[nodiscard]] std::optional<unsigned int>
         createVertexBuffer(const std::vector<resources::ModelGeometry::VertexType> &) const noexcept;
 
-        [[nodiscard]] static bool
+        [[nodiscard]] static base::Error
         initializeGLEW() noexcept;
 
     public:
@@ -58,22 +64,23 @@ namespace gle {
                 : GraphicsAPI(scene, controller, camera) {
         }
 
-        [[nodiscard]] resources::ModelGeometryDescriptor *
+        [[nodiscard]] base::ErrorOr<resources::ModelGeometryDescriptor *>
         createModelGeometry(const resources::ModelGeometry &geometry) noexcept override;
 
-        [[nodiscard]] resources::TextureDescriptor *
+        [[nodiscard]] base::ErrorOr<resources::SkyboxDescriptor *>
+        createSkyBox(const resources::TextureInput &) noexcept override;
+
+        [[nodiscard]] base::ErrorOr<resources::ModelGeometryDescriptor *>
+        createSphere(std::size_t stackCount, std::size_t sectorCount, float radius) noexcept override;
+
+        [[nodiscard]] base::ErrorOr<resources::TextureDescriptor *>
         createTexture(const resources::TextureInput &textureInput) noexcept override;
 
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         initialize(WindowAPI *) override;
 
-        [[nodiscard]] std::unique_ptr<ecs::Scene>
+        [[nodiscard]] base::ErrorOr<std::unique_ptr<ecs::Scene>>
         loadGLTFScene(std::string_view fileName) noexcept override;
-
-#ifdef LAVENDER_BUILD_DEBUG
-        void
-        onDebugKey(input::KeyboardUpdate) noexcept override;
-#endif
 
         /**
          * Is called to initialize things that depend on the window size.
@@ -86,7 +93,7 @@ namespace gle {
         void
         renderEntities() noexcept override;
 
-        [[nodiscard]] const resources::ModelDescriptor *
+        [[nodiscard]] base::ErrorOr<const resources::ModelDescriptor *>
         uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept override;
     };
 

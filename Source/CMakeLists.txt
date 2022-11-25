@@ -7,15 +7,21 @@
 # All Rights Reserved.
 
 set(ENABLE_WIN32 ON CACHE BOOL "Enable Win32 support")
+set(ENABLE_VULKAN OFF CACHE BOOL "Enable Vulkan support")
 
 add_library(LavenderCore STATIC
             Base/Error.cpp
+            Base/Task.cpp
+            ECS/Node.cpp
             GraphicsAPI.cpp
             Lavender.cpp
             Lavender.hpp
             Interface/FreeCamera.cpp
             Math/Math.cpp
             Math/Matrix4x4.cpp
+            Resources/FileResourceLocation.cpp
+            Resources/MemoryResourceLocation.cpp
+            Resources/ResourceLocateEvent.cpp
             Window/WindowAPI.cpp
 )
 
@@ -28,21 +34,30 @@ endif()
 
 add_executable(Lavender main.cpp)
 
+add_subdirectory(Devices)
+add_subdirectory(Event)
 add_subdirectory(Input)
 add_subdirectory(IO)
+add_subdirectory(Network)
 add_subdirectory(OpenGL)
 add_subdirectory(Platform)
-add_subdirectory(Vulkan)
 add_subdirectory(Window)
+
+if (ENABLE_VULKAN)
+    add_subdirectory(Vulkan)
+    target_link_libraries(LavenderCore PUBLIC VulkanAPIEngine)
+endif()
 
 target_link_libraries(LavenderCore
   PRIVATE project_diagnostics
   PUBLIC  GLFWCore
+          DeviceLibrary
+          EventLibrary
           InputLibrary
           IOLibrary
+          NetworkCore
           OpenGLAPIEngine
           PlatformCore
-          VulkanAPIEngine
 
           GLEW::GLEW
           glfw ${GLFW_LIBRARIES}
@@ -59,6 +74,9 @@ if (ENABLE_WIN32)
     target_link_libraries(LavenderWin32 PRIVATE project_diagnostics LavenderCore)
 
     if (MSVC)
+        target_link_options(LavenderCore PUBLIC /PROFILE)
+        target_link_options(LavenderWin32 PUBLIC /PROFILE)
+
         target_link_options(LavenderWin32 PRIVATE "/SUBSYSTEM:WINDOWS")
     endif()
 endif()

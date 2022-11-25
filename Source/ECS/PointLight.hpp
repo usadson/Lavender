@@ -25,6 +25,18 @@ namespace ecs {
                 , m_attenuationExponent(attenuationExponent) {
         }
 
+        [[nodiscard]] inline
+        PointLight(std::string &&name, math::Transformation transformation, math::Vector3f color, float radius, 
+                   float intensity, float attenuationConstant, float attenuationLinear, float attenuationExponent) noexcept
+                : Entity(std::move(name), nullptr, transformation)
+                , m_color(color)
+                , m_radius(radius)
+                , m_intensity(intensity)
+                , m_attenuationConstant(attenuationConstant)
+                , m_attenuationLinear(attenuationLinear)
+                , m_attenuationExponent(attenuationExponent) {
+        }
+
         [[nodiscard]] inline constexpr float
         attenuationConstant() const noexcept {
             return m_attenuationConstant;
@@ -48,6 +60,11 @@ namespace ecs {
         [[nodiscard]] inline constexpr float
         intensity() const noexcept {
             return m_intensity;
+        }
+
+        [[nodiscard]] bool
+        isLight() const noexcept final {
+            return true;
         }
 
         [[nodiscard]] inline constexpr float

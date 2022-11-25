@@ -123,10 +123,10 @@
         }
     ],
     "samplers" : [
-        {
-            "magFilter" : 9729,
-            "minFilter" : 9987
-        }
+            {
+                "magFilter" : 9729,
+                "minFilter" : 9987
+            }
     ],
     "buffers" : [
         {

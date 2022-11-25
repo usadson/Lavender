@@ -13,12 +13,12 @@
 
 #include <array>
 
-#ifndef NDEBUG
+#ifdef LAVENDER_SHOW_CONSOLE
 #   include <Windows.h>
-#endif // !NDEBUG
+#   include <process.h>
+#endif // LAVENDER_SHOW_CONSOLE
 
 #include <cassert>
-#include <process.h>
 
 namespace platform::win32 {
 
@@ -57,19 +57,22 @@ namespace platform::win32 {
     
     void *
     ConsoleManager::findWindowHandle() const noexcept {
+#ifdef LAVENDER_SHOW_CONSOLE
         static std::array<char, 1024> title{};
         auto length = GetConsoleTitleA(title.data(), static_cast<DWORD>(title.size()));
         if (length == 0)
             return nullptr;
 
         return FindWindow(nullptr, title.data());
+#else
+        static_cast<void>(this);
+        return nullptr;
+#endif
     }
 
     bool
     ConsoleManager::initialize() noexcept {
-#ifdef NDEBUG
-        return true;
-#else
+#ifdef LAVENDER_SHOW_CONSOLE
         if (!AllocConsole())
             return false;
 
@@ -83,12 +86,18 @@ namespace platform::win32 {
             return false;
 
         return true;
-#endif // !NDEBUG
+#else
+        static_cast<void>(this);
+        return true;
+#endif // LAVENDER_SHOW_CONSOLE
     }
 
     void 
-    ConsoleManager::pause() noexcept { 
+    ConsoleManager::pause() noexcept {
+        static_cast<void>(this);
+#ifdef LAVENDER_SHOW_CONSOLE
         system("pause");
+#endif // LAVENDER_SHOW_CONSOLE
     }
 
 

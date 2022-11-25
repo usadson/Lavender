@@ -12,5 +12,6 @@
 namespace input {
 
     struct Controller;
+    enum class StandardCursor;
 
 } // namespace input

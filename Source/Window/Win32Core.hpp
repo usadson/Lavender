@@ -19,13 +19,23 @@
 #   include "Source/Platform/Win32/SystemCommand.hpp"
 #endif // WIN32CORE_ENABLE_WINDOWS_FUNCTIONS
 
-#ifndef NDEBUG
-#   include <source_location>
-#endif // !NDEBUG
-
 namespace window {
 
     struct Win32Data;
+
+    enum class Win32DragDropMethod {
+        //
+        // Use the pre-Windows 95 method.
+        // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-dragfinish
+        //
+        DROPFILES,
+
+        //
+        // Use the OLE method.
+        // https://learn.microsoft.com/en-us/windows/win32/api/ole2/
+        // 
+        OLE,
+    };
 
     class Win32Core final
         : public WindowAPI {
@@ -52,6 +62,9 @@ namespace window {
             return true;
         }
 
+        [[nodiscard]] base::Error
+        enableDragAndDrop(WindowDragAndDropOption) noexcept override;
+
         [[nodiscard]] math::Vector2u
         queryFramebufferSize() const noexcept override;
 
@@ -59,7 +72,7 @@ namespace window {
         queryGLContextVersion() const noexcept override;
 
         [[nodiscard]] base::Error
-        requestClose(window::CloseRequestedEvent::Reason reason) noexcept override;
+        requestClose(CloseRequestedEvent::Reason reason) noexcept override;
 
         /**
          * Request to the underlying API to enable or disable VSync. Please note
@@ -69,32 +82,42 @@ namespace window {
         void
         requestVSyncMode(bool enabled) noexcept override;
 
+        [[nodiscard]] base::Error 
+        setCursor([[maybe_unused]] input::StandardCursor) noexcept override;
+
+        void 
+        setDarkMode(DarkModeOption option) noexcept override;
+
+        [[nodiscard]] base::Error 
+        setIcon(std::string_view fileName) noexcept override;
+
         void
         setMouseGrabbed(input::MouseGrabbed) noexcept override;
+
+        [[nodiscard]] base::Error
+        setTitle(std::string &&) noexcept override;
 
         [[nodiscard]] inline constexpr bool
         shouldClose() override {
             return m_shouldClose;
         }
 
-        [[nodiscard]] base::Error 
-        setIcon(std::string_view fileName) noexcept override;
-
-        void 
-        setDarkMode(DarkModeOption option) noexcept;
-
         void preLoop() override;
         void postLoop() override;
 
+        void
+        showMessageBox(std::string_view title, std::string_view message) noexcept override;
+
 #ifdef WIN32CORE_ENABLE_WINDOWS_FUNCTIONS
+        [[nodiscard]] std::optional<LRESULT>
+        handleDropFilesNotification(HDROP) noexcept;
+
         [[nodiscard]] std::optional<LRESULT>
         handleWindowMessage(platform::win32::WindowNotification, WPARAM, LPARAM);
 #endif // WIN32CORE_ENABLE_WINDOWS_FUNCTIONS
-
-#ifndef NDEBUG
+        
         void
         displayErrorMessage(std::string_view description, std::source_location) const;
-#endif // !NDEBUG
 
     protected:
         void 
@@ -104,6 +127,26 @@ namespace window {
         [[nodiscard]] base::Error
         initializeAPI(GraphicsAPI::Name);
 
+        void
+        honorUserTheme() noexcept;
+
+        void
+        onDeactivate() noexcept;
+
+        void
+        putMouseCursorAtCenterOfWindow() noexcept;
+
+        [[nodiscard]] bool 
+        shouldUseDarkMode() noexcept;
+
+        [[nodiscard]] static const char *
+        translateStandardCursorToCursorName(input::StandardCursor) noexcept;
+
+        std::unique_ptr<Win32Data> m_data;
+        bool m_shouldClose{false};
+        Win32DragDropMethod m_dragAndDropMethod{};
+        std::optional<input::StandardCursor> m_currentStandardCursor{};
+
 #ifdef WIN32CORE_ENABLE_WINDOWS_FUNCTIONS
         void
         handleMouseMove(WPARAM, LPARAM);
@@ -112,14 +155,16 @@ namespace window {
         handleSystemCommand(platform::win32::SystemCommand, LPARAM) noexcept;
 #endif // WIN32CORE_ENABLE_WINDOWS_FUNCTIONS
 
-        void
-        honorUserTheme() noexcept;
+#ifdef LAVENDER_WIN32_HAS_OLE
+        [[nodiscard]] base::Error
+        oleDragAndDropEnable() const noexcept;
 
-        [[nodiscard]] bool 
-        shouldUseDarkMode() noexcept;
+        [[nodiscard]] base::Error
+        oleDragAndDropDisable() const noexcept;
 
-        std::unique_ptr<Win32Data> m_data;
-        bool m_shouldClose{false};
+        [[nodiscard]] static base::Error
+        oleInitialize() noexcept;
+#endif // LAVENDER_WIN32_HAS_OLE_DND
     };
 
 } // namespace window

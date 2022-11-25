@@ -9,6 +9,10 @@
 
 #pragma once
 
+#ifdef interface
+#undef interface
+#endif // interface
+
 namespace interface {
 
     class Camera;

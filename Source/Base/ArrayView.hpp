@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 namespace base {
 
@@ -18,7 +18,7 @@ namespace base {
     template<typename Type>
     class ArrayView {
         Type *m_data{};
-        std::uint32_t m_size{};
+        std::size_t m_size{};
 
     public:
         [[nodiscard]] ArrayView() noexcept = default;
@@ -28,17 +28,17 @@ namespace base {
         ArrayView &operator=(const ArrayView &) noexcept = default;
 
         [[nodiscard]] inline constexpr
-        ArrayView(Type *data, std::uint32_t size) noexcept
+        ArrayView(Type *data, std::size_t size) noexcept
                 : m_data(data)
                 , m_size(size) {
         }
 
-        [[nodiscard]] inline constexpr std::uint32_t &
+        [[nodiscard]] inline constexpr std::size_t &
         size() noexcept {
             return m_size;
         }
 
-        [[nodiscard]] inline constexpr std::uint32_t
+        [[nodiscard]] inline constexpr std::size_t
         size() const noexcept {
             return m_size;
         }
@@ -61,6 +61,16 @@ namespace base {
         [[nodiscard]] inline constexpr Type *
         end() const noexcept {
             return m_data + m_size;
+        }
+
+        [[nodiscard]] inline constexpr Type &
+        operator[](std::size_t index) noexcept {
+            return m_data[index];
+        }
+
+        [[nodiscard]] inline constexpr const Type &
+        operator[](std::size_t index) const noexcept {
+            return m_data[index];
         }
 
     };

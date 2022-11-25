@@ -9,9 +9,10 @@
 
 #pragma once
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
+#   define LAVENDER_SHOW_CONSOLE
 #   include <cstdio>
-#endif // !NDEBUG
+//#endif
 
 namespace platform::win32 {
 
@@ -42,11 +43,11 @@ namespace platform::win32 {
     private:
         bool m_keepOpen{false};
 
-#ifndef NDEBUG
+#ifdef LAVENDER_SHOW_CONSOLE
         std::FILE *m_stdin{nullptr};
         std::FILE *m_stdout{nullptr};
         std::FILE *m_stderr{nullptr};
-#endif // !NDEBUG
+#endif // LAVENDER_SHOW_CONSOLE
     };
 
 } // namespace platform::win32

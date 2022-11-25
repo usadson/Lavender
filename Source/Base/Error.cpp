@@ -127,6 +127,8 @@ namespace base {
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), s_descriptionBuffer.data(),
             static_cast<DWORD>(s_descriptionBuffer.size()), nullptr);
 
+        std::printf("\tWinErr: %s\n", s_descriptionBuffer.data());
+
         if (bufferLength == 0 && GetLastError() == ERROR_MR_MID_NOT_FOUND) { 
             std::stringstream stream;
             stream << "Unknown error " << error << " (0x" << std::hex << error << ")";

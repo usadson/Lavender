@@ -8,9 +8,10 @@
 
 #include <memory>
 
-#include "Source/Base/ExitStatus.hpp"
-#include "Source/Base/Library.hpp"
+#include "Source/Base/Error.hpp"
+#include "Source/Devices/DeviceManager.hpp"
 #include "Source/ECS/Scene.hpp"
+#include "Source/Event/FunctionQueue.hpp"
 #include "Source/Input/Controller.hpp"
 #include "Source/Interface/FreeCamera.hpp"
 #include "Source/Window/WindowAPI.hpp"
@@ -31,8 +32,16 @@ class Lavender {
     input::Controller m_controller{};
     interface::FreeCamera *m_camera{};
 
+    std::optional<ecs::Scene> m_currentlyImportingScene;
     ecs::Scene m_scene{ecs::EntityList{}};
     ecs::Entity *m_mainEntity{nullptr};
+    devices::DeviceManager m_deviceManager{};
+
+    [[nodiscard]] base::Error
+    processEvents() noexcept;
+
+    [[nodiscard]] base::Error
+    refreshTitle(const std::string &graphicsModeName) noexcept;
 
     void
     render() noexcept;
@@ -47,9 +56,11 @@ class Lavender {
     setupLights() noexcept;
 
     void
-    update(float deltaTime) noexcept;
+    update(double deltaTime) noexcept;
 
 public:
+    event::FunctionQueue mainThreadQueue{};
+
     [[nodiscard]] base::Error
     run();
 };

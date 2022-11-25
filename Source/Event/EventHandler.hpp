@@ -24,9 +24,9 @@ namespace event {
 
         [[nodiscard]] inline
         EventHandler() noexcept = default;
-
-        EventHandler(EventHandler &&) noexcept = delete;
-        EventHandler(const EventHandler &) noexcept = delete;
+        
+        EventHandler(EventHandler &&) noexcept = default;
+        EventHandler(const EventHandler &) noexcept = default;
 
         inline void 
         operator+=(HandlerType handler) noexcept {
@@ -37,9 +37,11 @@ namespace event {
         invoke(EventType &event) noexcept {
             ++m_firedEventsCount;
 
-            for (auto &handler : m_handlers) {
-                if (auto error = handler(event))
-                    return error;
+            if (!m_handlers.empty()) {
+                for (auto& handler : m_handlers) {
+                    if (auto error = handler(event))
+                        return error;
+                }
             }
 
             return base::Error::success();

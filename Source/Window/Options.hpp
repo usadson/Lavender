@@ -15,6 +15,11 @@ enum class DarkModeOption {
     FORCE_OFF
 };
 
+enum class WindowDragAndDropOption {
+    DISABLED,
+    ENABLED
+};
+
 enum class WindowVisibilityOption {
     HIDE,
     SHOW

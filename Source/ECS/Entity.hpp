@@ -9,12 +9,14 @@
 #include <string>
 
 #include "Source/ECS/Forward.hpp"
+#include "Source/ECS/Node.hpp"
 #include "Source/Math/Transformation.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 
 namespace ecs {
 
-    class Entity {
+    class Entity
+            : public Node {
         std::string m_name;
         const resources::ModelDescriptor *m_modelDescriptor{};
         math::Transformation m_transformation{};
@@ -36,12 +38,9 @@ namespace ecs {
             , m_transformation(transformation) {
         }
 
-        virtual
-        ~Entity() noexcept = default;
-
-        virtual void
-        onUpdate(float deltaTime) noexcept {
-            static_cast<void>(deltaTime);
+        [[nodiscard]] bool
+        isEntity() const noexcept final {
+            return true;
         }
 
         /**

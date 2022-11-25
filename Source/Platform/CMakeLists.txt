@@ -5,15 +5,21 @@
 # Copyright (C) 2022 Tristan Gerritsen <tristan@thewoosh.org>
 # All Rights Reserved.
 
-add_library(PlatformCore OBJECT)
+add_library(PlatformCore OBJECT
+        Platform.cpp
+)
 target_link_libraries(PlatformCore PRIVATE project_diagnostics fmt::fmt)
 
 if (ENABLE_WIN32)
     target_sources(PlatformCore PRIVATE
             WinPlatform.cpp
             Win32/ConsoleManager.cpp
+            Win32/DropTarget.cpp
             Win32/Input.cpp
+            Win32/OLE/OLE.cpp
+            Win32/Platform.cpp
             Win32/UndocumentedAPIs.cpp
+            Win32/Utilities.cpp
             Win32/UWP.cpp
     )
     if (MSVC)

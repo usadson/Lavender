@@ -14,9 +14,14 @@ namespace interface {
     class Camera
             : public ecs::Entity {
     public:
-        [[nodiscard]] inline explicit
+        [[nodiscard]] explicit
         Camera(math::Vector3f position = {}) noexcept
-                : ecs::Entity("Camera", nullptr, {position, {}, {}}) {
+                : Entity("Camera", nullptr, {position, {}, {}}) {
+        }
+
+        [[nodiscard]] bool
+        isCamera() const noexcept final {
+            return true;
         }
 
         virtual void

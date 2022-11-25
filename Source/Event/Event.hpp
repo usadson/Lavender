@@ -13,7 +13,7 @@ namespace event {
 
     struct Event {
 
-        virtual inline constexpr 
+        virtual constexpr 
         ~Event() noexcept = default;
 
     };

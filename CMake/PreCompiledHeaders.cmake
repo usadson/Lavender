@@ -4,7 +4,7 @@
 
 option(ENABLE_PCH "Enable PreCompiledHeaders" ON)
 
-if (ENABLE_PCH)
+if (OFF)
     add_library(PCH_Libraries INTERFACE)
     target_link_libraries(PCH_Libraries INTERFACE GLEW::GLEW)
     target_precompile_headers(PCH_Libraries INTERFACE
@@ -17,6 +17,8 @@ if (ENABLE_PCH)
             # Libraries
             <GL/glew.h>
     )
+
+    set_project_diagnostics(PCH_Libraries)
 
     add_library(PCH_Vulkan INTERFACE)
     if (ENABLE_VULKAN)

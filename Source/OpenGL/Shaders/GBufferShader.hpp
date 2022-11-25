@@ -21,6 +21,11 @@ namespace gle {
     class GBufferShader {
     public:
         [[nodiscard]] inline constexpr GL::UnsignedIntType
+        attributeLocationBitangent() const noexcept {
+            return m_attribBitangent;
+        }
+
+        [[nodiscard]] inline constexpr GL::UnsignedIntType
         attributeLocationNormal() const noexcept {
             return m_attribNormal;
         }
@@ -28,6 +33,11 @@ namespace gle {
         [[nodiscard]] inline constexpr GL::UnsignedIntType
         attributeLocationPosition() const noexcept {
             return m_attribPosition;
+        }
+
+        [[nodiscard]] inline constexpr GL::UnsignedIntType
+        attributeLocationTangent() const noexcept {
+            return m_attribTangent;
         }
 
         [[nodiscard]] inline constexpr GL::UnsignedIntType
@@ -69,6 +79,8 @@ namespace gle {
         GL::UnsignedIntType m_attribPosition{};
         GL::UnsignedIntType m_attribTextureCoordinates{};
         GL::UnsignedIntType m_attribNormal{};
+        GL::UnsignedIntType m_attribTangent{};
+        GL::UnsignedIntType m_attribBitangent{};
 
         UniformMatrix4 m_uniformTransformation{-1};
         UniformMatrix4 m_uniformProjection{-1};

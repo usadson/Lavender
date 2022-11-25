@@ -26,7 +26,7 @@ namespace interface {
                 , m_controller(controller) {
         }
 
-        void
+        [[nodiscard]] ecs::DidUpdate
         onUpdate(float deltaTime) noexcept override;
 
         [[nodiscard]] math::Matrix4x4<float>

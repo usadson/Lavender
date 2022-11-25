@@ -12,31 +12,57 @@
 #include <chrono>
 #include <random>
 
+#include "Source/Base/About.hpp"
 #include "Source/ECS/PointLight.hpp"
 #include "Source/Input/Bluetooth/Win32BluetoothManager.hpp"
 #include "Source/OpenGL/GLCore.hpp"
+#include "Source/Resources/FileResourceLocation.hpp"
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
+
+#include <iostream>
+#include <ranges>
+
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
 
 #ifdef LAVENDER_WIN32_SUPPORT_ENABLED
 #   include "Source/Window/Win32Core.hpp"
 #endif
 
+base::Error
+Lavender::processEvents() noexcept {
+    return mainThreadQueue.processAll();
+}
+
 void
-Lavender::update(float deltaTime) noexcept {
-    static float rot = 0;
-    rot += deltaTime;
-
-//    m_mainEntity->transformation().rotation = {rot * 10, 0.0f, 0.0f};
-//    m_mainEntity->transformation().rotation = {0.0f, rot * 10, 0.0f};
-//    m_mainEntity->transformation().rotation = {0.0f, 0.0f, rot * 10};
-
-    for (auto &entity : std::data(m_scene.entityList())) {
-        entity->onUpdate(deltaTime);
-    }
-
+Lavender::update(double deltaTime) noexcept {
+    m_scene.fireUpdate(static_cast<float>(deltaTime));
     m_controller.rotateYaw = 0;
 }
+
+base::Error
+Lavender::refreshTitle(const std::string &graphicsModeName) noexcept {
+    std::stringstream stream;
+    stream << base::About::applicationName << " v" << static_cast<std::size_t>(base::About::applicationVersion.major()) << '.'
+           << static_cast<std::size_t>(base::About::applicationVersion.minor());
+
+    if (base::About::applicationVersion.patch() != 0)
+        stream << '.' << static_cast<std::size_t>(base::About::applicationVersion.patch());
+
+    stream << " (" << base::About::engineName << " v" << static_cast<std::size_t>(base::About::engineVersion.major()) << '.'
+           << static_cast<std::size_t>(base::About::engineVersion.minor());
+
+    if (base::About::engineVersion.patch() != 0)
+        stream << '.' << static_cast<std::size_t>(base::About::engineVersion.patch());
+
+    stream << ')';
+    if (!graphicsModeName.empty())
+        stream << " " << graphicsModeName;
+
+    return m_windowAPI->setTitle(stream.str());
+}
+
 
 void
 Lavender::render() noexcept {
@@ -79,14 +105,50 @@ Lavender::run() {
         }
     }
 
+    if (auto error = m_windowAPI->enableDragAndDrop(WindowDragAndDropOption::ENABLED))
+        return error;
+
     m_windowAPI->onCloseRequested +=[](window::CloseRequestedEvent &event) -> base::Error {
         std::printf("[Lavender] Close requested: %s\n", toString(event.reason()).data());
         return base::Error::success();
     };
 
-    m_windowAPI->setDarkMode(DarkModeOption::HONOR_USER_SETTINGS);
+    m_windowAPI->onDragEnter += [&](input::DragEnterEvent &event) -> base::Error {
+        event.allowDrop();
+        std::size_t index = 0;
+        while (index < m_scene.entityList().data().size()) {
+            auto &entity = *m_scene.entityList().data()[index];
+            if (entity.name() == "Camera")
+                ++index;
+            else {
+                fmt::print("Deleting entity \"{}\" @ {:p}\n", entity.name(), static_cast<const void *>(&entity));
+                m_scene.entityList().remove(&entity);
+            }
+        }
+        return base::Error::success();
+    };
 
-    m_windowAPI->setIcon("Resources/lavender.png").displayErrorMessageBox();
+    m_windowAPI->onDragOver += [](input::DragOverEvent &event) -> base::Error {
+        event.allowDrop();
+        return base::Error::success();
+    };
+
+    m_windowAPI->onDrop += [&](input::DropEvent &event) -> base::Error {
+        event.allowDrop();
+
+        assert(event.data().type() == input::DragObject::Type::FILE_LOCATIONS);
+        const auto &locations = event.data().asFileLocations();
+        assert(!locations.empty());
+
+        TRY_GET_VARIABLE(scene, m_graphicsAPI->loadGLTFScene(locations.front()))
+        m_scene.import(std::move(*scene));
+
+        return base::Error::success();
+    };
+
+    m_windowAPI->setDarkMode(DarkModeOption::HONOR_USER_SETTINGS);
+    
+    TRY(m_windowAPI->setIcon("Resources/lavender.png"));
     m_windowAPI->setVisibility(WindowVisibilityOption::SHOW);
 
     m_windowAPI->requestVSyncMode(false);
@@ -96,52 +158,111 @@ Lavender::run() {
     std::printf("[Lavender] Context Version: %i.%i.%i\n", glVersion.major, glVersion.minor, glVersion.revision);
 
     m_graphicsAPI = std::make_unique<gle::Core>(&m_scene, &m_controller, m_camera);
-//    m_graphicsAPI = std::make_unique<vke::Core>(&m_scene, &m_controller, m_camera);
-    if (!m_graphicsAPI->initialize(m_windowAPI.get()))
-        return errors.error("Initialize GraphicsAPI", "Unknown Error (TODO)");
+    TRY(m_graphicsAPI->initialize(m_windowAPI.get()))
+    
+    m_graphicsAPI->onLocateResource += [&](resources::ResourceLocateEvent &event) -> base::Error {
+        //std::cout << "[ResourceLocateEvent] ResourceName: " << event.resourceName() << '\n';
+
+        auto checkDirectory = [&](const std::filesystem::path &path) -> bool {
+            //std::cout << "[ResourceLocateEvent] Looking in: " << path << '\n';
+
+            switch (event.resourceType()) {
+            case resources::ResourceLocateEvent::ResourceType::IMAGE:
+            case resources::ResourceLocateEvent::ResourceType::BINARY:
+                for (const auto &entry : std::filesystem::directory_iterator(path)) {
+                    //std::cout << "  > " << entry.path().filename() << '\n';
+                    if (!entry.is_regular_file())
+                        continue;
+
+                    if (entry.path().stem() != event.resourceName() && entry.path().filename() != event.resourceName())
+                        continue;
+
+                    //std::cout << "[ResourceLocateEvent] Found the resource: " << entry << '\n';
+
+                    event.location()
+                        = std::make_unique<resources::FileResourceLocation>(std::filesystem::path(entry.path()));
+                    return true;
+                }
+
+                break;
+            default:
+                return false;
+            }
+
+            return false;
+        };
+        
+        for (auto &it : std::ranges::reverse_view(event.directoryHints())) {
+            std::filesystem::path path(it);
+
+            if (checkDirectory(path))
+                return base::Error::success();
+
+            path.append("Resources/Assets/");
+            if (!std::filesystem::is_directory(path))
+                continue;
+
+            if (checkDirectory(path))
+                return base::Error::success();
+
+            path.append("Textures");
+            if (!std::filesystem::is_directory(path))
+                continue;
+
+            if (checkDirectory(path))
+                return base::Error::success();
+        }
+
+        std::stringstream stream;
+        stream << "Couldn't locate resource!\n\nResource Name: \"" << event.resourceName() << "\"\nLooking in "
+               << event.directoryHints().size();
+        if (event.directoryHints().size() == 1)
+            stream << "directory.\n";
+        else
+            stream << "directories.\n";
+
+        for (const auto &directory : event.directoryHints())
+            stream << "Directory : \"" << directory << "\"\n";
+
+        static std::string errorDescription;
+        errorDescription = stream.str();
+        return base::Error("LavenderCore", "Lavender", "Resolve ResourceLocateEvent", errorDescription);
+    };
+
+#ifndef NDEBUG
+    m_graphicsAPI->onGraphicsModeChange += [&](const std::string &modeName) {
+        return refreshTitle(modeName);
+    };
+#endif
 
     m_windowAPI->registerGraphicsAPI(m_graphicsAPI.get());
 
     renderFirstFrameAsLavenderIsLoading();
 
     {
-        auto scene = m_graphicsAPI->loadGLTFScene("Resources/Assets/Models/Scene.gltf");
-        if (scene == nullptr)
-            return errors.error("Load Scene.gltf", "Unknown Error (TODO)");
+        //auto scene = m_graphicsAPI->loadGLTFScene("Resources/Assets/Models/Scene.gltf");
+        //auto scene = m_graphicsAPI->loadGLTFScene("C:\\Data\\MKWii\\DryBones\\output\\modelout.gltf");
+        std::size_t requiredDrive{}, requiredPath{};
+        std::array<char, 8> homeDrive;
+        getenv_s(&requiredDrive, homeDrive.data(), homeDrive.size(), "HOMEDRIVE");
+        std::array<char, 128> homePath;
+        getenv_s(&requiredPath, homePath.data(), homePath.size(), "HOMEPATH");
+
+        TRY_GET_VARIABLE(scene, m_graphicsAPI->loadGLTFScene(
+            fmt::format("{}{}\\3D Objects\\gltfSampleModels\\2.0\\Sponza\\glTF\\Sponza.gltf", homeDrive.data(), homePath.data())
+            //fmt::format("{}{}\\3D Objects\\0.gltf", homeDrive.data(), homePath.data())
+            //"C:/Data/MKWii/Luigi Circuit/output/course.gltf"
+            //"C:/Data/Assets/ThinMatrixSkeletalAnimationDemo/scene.gltf"
+            //"C:/Data/ANCH/ICCRMMCHN/scene.gltf"
+        ));
+        //TRY_GET_VARIABLE(scene, m_graphicsAPI->loadGLTFScene("Resources/Assets/Models/Scene.gltf"));
 
         m_scene.import(std::move(*scene));
     }
     renderFirstFrameAsLavenderIsLoading();
 
-    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
-        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
-        true
-    });
-
-    auto *dispatcherTexture = m_graphicsAPI->createTexture(resources::TextureInput{
-        "Resources/Assets/Textures/Dispatcher_Orange.png",
-        true
-    });
-
-    assert(planeTexture != nullptr);
-    assert(dispatcherTexture != nullptr);
-
     for (const auto &entity : m_scene.entityList().data()) {
-        if (entity->modelDescriptor() == nullptr)
-            continue;
-
-        auto *texture = planeTexture;
-
-        if (entity->name() == "Dispatcher") {
-            m_mainEntity = entity.get();
-            texture = dispatcherTexture;
-        } else if (entity->name() == "Plane") {
-            entity->transformation().scaling = {10.0f, 10.0f, 10.0f};
-            entity->transformation().translation = {0.0f, -2.0f, 0.0f};
-        }
-
-        const_cast<resources::ModelDescriptor *>(const_cast<ecs::Entity *>(entity.get())->modelDescriptor())
-            ->attachTexture(resources::TextureSlot::ALBEDO, texture);
+        m_mainEntity = entity.get();
     }
     
     renderFirstFrameAsLavenderIsLoading();
@@ -149,39 +270,32 @@ Lavender::run() {
     if (m_mainEntity == nullptr)
         return errors.error("Initializing entities in scene", "Failed to find main entity 'Dispatcher'");
 
-//    auto *planeTexture = m_graphicsAPI->createTexture(resources::TextureInput{
-//        "Resources/Assets/Textures/bricks03 diffuse 1k.jpg",
-//        true
-//    });
-//
-//    auto *planeGeometry = m_graphicsAPI->loadGLTFModelGeometry("Resources/Assets/Models/Plane.gltf");
-//    assert(planeGeometry != nullptr);
-//    auto planeModelDescriptor = resources::ModelDescriptor{planeGeometry};
-//    planeModelDescriptor.attachTexture(resources::TextureSlot::ALBEDO, planeTexture);
-//    auto *planeModel = m_graphicsAPI->uploadModelDescriptor(std::forward<resources::ModelDescriptor>(planeModelDescriptor));
-//    assert(planeModel != nullptr);
-//    auto *planeEntity = m_scene.entityList().create(planeModel);
-//    assert(planeEntity != nullptr);
-//    planeEntity->transformation().scaling = {10.0f, 10.0f, 10.0f};
-
     setupLights();
     renderFirstFrameAsLavenderIsLoading();
 
-    float temp = 0;
+    double temp = 0;
     std::uint16_t frameCount{0};
     while (!m_windowAPI->shouldClose()) {
         ++frameCount;
 
         const auto thisFrameTime = std::chrono::steady_clock::now();
-        const auto deltaTime = duration_cast<std::chrono::duration<float>>(thisFrameTime - previousFrameTime).count();
+        const auto deltaTime = duration_cast<std::chrono::duration<double>>(thisFrameTime - previousFrameTime).count();
         previousFrameTime = thisFrameTime;
 
         temp += deltaTime;
         if (temp >= 1.0f) {
-            temp -= 1;
-            std::printf("[Lavender] FPS: %hu (deltaTime=%f)\n", frameCount, static_cast<double>(deltaTime));
+            if (temp >= 2.0f) {
+                std::printf("[Lavender] 1 frame after %f seconds\n", temp);
+                temp = 0;
+            } else {
+                temp -= 1;
+                std::printf("[Lavender] FPS: %hu (deltaTime=%f)\n", frameCount, deltaTime);
+            }
             frameCount = 0;
         }
+
+        if (auto error = processEvents())
+            error.displayErrorMessageBox();
 
         update(deltaTime);
 
@@ -198,13 +312,16 @@ Lavender::run() {
 
 void
 Lavender::setupController() noexcept {
-#if 0
+#if 1
     m_bluetoothManager = std::make_unique<input::bluetooth::Win32BluetoothManager>();
     if (auto error = m_bluetoothManager->initialize())
         error.displayErrorMessageBox();
+
+    if (auto error = m_deviceManager.initialize())
+        error.displayErrorMessageBox();
 #endif
 
-    m_windowAPI->onKeyPressed += [&](input::KeyPressedEvent &event) -> base::Error { 
+    m_windowAPI->onKeyPressed += [&](const input::KeyPressedEvent &event) -> base::Error { 
         switch (event.key()) {
 #define LAVENDER_MAP_KEY(key, entry) \
             case input::KeyboardKey::key: \
@@ -217,8 +334,7 @@ Lavender::setupController() noexcept {
             LAVENDER_MAP_KEY(SPACE, moveUp)
             LAVENDER_MAP_KEY(LEFT_SHIFT, moveDown)
             case input::KeyboardKey::ESCAPE:
-                if (auto error = m_windowAPI->requestClose(window::CloseRequestedEvent::Reason::APPLICATION))
-                    error.displayErrorMessageBox();
+                TRY(m_windowAPI->requestClose(window::CloseRequestedEvent::Reason::APPLICATION))
                 break;
             case input::KeyboardKey::NUMPAD9: {
                 auto pos = m_camera->position();
@@ -233,9 +349,7 @@ Lavender::setupController() noexcept {
         return base::Error::success();
     };
 
-    //m_graphicsAPI->onDebugKey(update);
-
-    m_windowAPI->onKeyReleased += [&](input::KeyReleasedEvent &event) -> base::Error {
+    m_windowAPI->onKeyReleased += [&](const input::KeyReleasedEvent &event) -> base::Error {
         switch (event.key()) {
 #undef LAVENDER_MAP_KEY
 #define LAVENDER_MAP_KEY(key, entry) \
@@ -255,7 +369,7 @@ Lavender::setupController() noexcept {
         return base::Error::success();
     };
     
-    m_windowAPI->registerMouseCallback([&](input::MouseUpdate update) {
+    m_windowAPI->registerMouseCallback([&](const input::MouseUpdate &update) {
         if (m_windowAPI->mouseGrabbed() == input::MouseGrabbed::NO) {
             if (update.button == input::MouseButton::LEFT && update.isPressed)
                 m_windowAPI->setMouseGrabbed(input::MouseGrabbed::YES);
@@ -296,13 +410,15 @@ Lavender::setupLights() noexcept {
 //        m_scene.entityList().add(std::move(pointLight));
 //    }
 
+#if 0
     m_scene.entityList().add(std::make_unique<ecs::PointLight>(
-            math::Vector3f{-0.570345f, 0.343115f, -0.175136f},
-            math::Vector3f{1.0f, 1.0f, 1.0f},
-            3.0f,
-            0.2f,
-            0.0f,
-            0.0f,
-            1.0f
+        math::Vector3f{0.0f, 0.0f, 0.0f},
+        math::Vector3f{1.0f, 0.0f, 1.0f},
+        3.0f,
+        0.2f,
+        0.0f,
+        0.0f,
+        1.0f
     ));
+#endif
 }

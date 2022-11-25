@@ -12,6 +12,11 @@
 using namespace window;
 
 base::Error
+WindowAPI::enableDragAndDrop([[maybe_unused]] WindowDragAndDropOption) noexcept {
+    return base::Error("WindowAPI", "WindowAPI", "Enable drag & drop", "This window implementation does not support this feature.");
+}
+
+base::Error
 WindowAPI::requestClose(CloseRequestedEvent::Reason reason) noexcept {
     CloseRequestedEvent event{this, reason};
     return onCloseRequested.invoke(event);

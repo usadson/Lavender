@@ -4,6 +4,7 @@
 #include <Windows.h>
 
 #include <sstream>
+#include <thread>
 
 #include "Source/Base/Error.hpp"
 
@@ -27,9 +28,10 @@ base::Error::displayErrorMessageBox() const noexcept {
            << "\nFile: " << sourceLocation().file_name() << ':' << sourceLocation().line() 
            << "\nFunction: " << sourceLocation().function_name()
     ;
-
-    auto message = stream.str();
-    MessageBox(nullptr, message.c_str(), "", MB_OK | MB_ICONHAND | MB_SETFOREGROUND);
+    
+    std::thread([message = stream.str()]() {
+        MessageBox(nullptr, message.c_str(), "", MB_OK | MB_ICONHAND | MB_SETFOREGROUND);
+    }).detach();
 }
 
 #endif // LAVENDER_WIN32_SUPPORT_ENABLED

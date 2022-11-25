@@ -17,6 +17,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <ws2def.h>
 #include <ws2bth.h>
 #include <cguid.h>
 #include <winsock2.h>
@@ -29,12 +30,12 @@ namespace input::bluetooth {
 
     struct Device {
         ~Device() noexcept { 
-            if (m_socket > 0)
+            if (m_socket != INVALID_SOCKET)
                 closesocket(m_socket);
         }
 
         static void 
-        printResult(int error) {
+        printResult(auto error) {
             switch (error) {
             case ERROR_SUCCESS:
                 std::cout << "Success.\n";
@@ -59,58 +60,14 @@ namespace input::bluetooth {
                 break;
             }
         }
-
+        
         [[nodiscard]] base::Error
-        initialize(const BLUETOOTH_DEVICE_INFO &deviceInfo) {
+        initialize([[maybe_unused]] const BLUETOOTH_DEVICE_INFO &deviceInfo) {
             base::FunctionErrorGenerator errors{"InputLibrary", "Win32BluetoothManager/Device"};
-
-            auto info = deviceInfo;
-
-            if (!deviceInfo.fAuthenticated) {
-                HBLUETOOTH_AUTHENTICATION_REGISTRATION registration;
-                auto registrationError = BluetoothRegisterForAuthenticationEx(
-                    &deviceInfo, 
-                    &registration,
-                    // typedef BOOL (CALLBACK *PFN_AUTHENTICATION_CALLBACK_EX)(_In_opt_ LPVOID pvParam, _In_ PBLUETOOTH_AUTHENTICATION_CALLBACK_PARAMS pAuthCallbackParams);
-                    [](LPVOID pvParam, PBLUETOOTH_AUTHENTICATION_CALLBACK_PARAMS pAuthCallbackParams) -> BOOL {
-                        auto *device = static_cast<Device *>(pvParam);
-                        std::cout << "Authetncatab!\n";
-
-                        BLUETOOTH_AUTHENTICATE_RESPONSE response{};
-                        response.bthAddressRemote = pAuthCallbackParams->deviceInfo.Address;
-                        response.authMethod = pAuthCallbackParams->authenticationMethod;
-                        for (std::size_t i = 0; i < 6; ++i)
-                            response.pinInfo.pin[i] = pAuthCallbackParams->deviceInfo.Address.rgBytes[5 - i];
-                        response.pinInfo.pinLength = 6;
-                        response.negativeResponse = FALSE;
-
-                        std::cout << "PIN: " << std::hex;
-                        for (std::size_t i = 0; i < 6; ++i)
-                            std::cout << static_cast<int>(response.pinInfo.pin[i]) << " ";
-                        std::cout << "\n" << std::dec;
-
-                        auto error = BluetoothSendAuthenticationResponseEx(nullptr, &response);
-                        std::cout << "Sending response: ";
-                        printResult(error);
-                        return true;
-                    },
-                    this
-                );
-
-                std::cout << "Registration went: ";
-                printResult(registrationError);
-
-                auto error = BluetoothAuthenticateDeviceEx(
-                    nullptr, 
-                    nullptr, 
-                    &info, 
-                    nullptr, 
-                    MITMProtectionNotRequired
-                );
-                std::cout << "Authenticate: ";
-                printResult(error);
-            }
-
+            if (deviceInfo.dwSize != 0)
+                return base::Error::success();
+            
+#if 0
             m_socket = socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
             if (m_socket == INVALID_SOCKET)
                 return errors.fromErrno("Create AF_BTH socket");
@@ -124,6 +81,7 @@ namespace input::bluetooth {
             // 11ce
             // bfc1
             // 08002be10318
+#if 0
             socketAddress.serviceClassId.Data1 = 0x4d36e972;
             socketAddress.serviceClassId.Data2 = 0xe325;
             socketAddress.serviceClassId.Data3 = 0x11ce;
@@ -131,18 +89,63 @@ namespace input::bluetooth {
             socketAddress.serviceClassId.Data4[1] = 0x0800;
             socketAddress.serviceClassId.Data4[2] = 0x2be1;
             socketAddress.serviceClassId.Data4[3] = 0x0318;
+#endif
             //socketAddress.port = 0x11;
 
             if (connect(m_socket, reinterpret_cast<const sockaddr *>(&socketAddress), sizeof(socketAddress)) == SOCKET_ERROR) {
                 return errors.fromWinError("Connect to Bluetooth Socket", WSAGetLastError());
             }
 
+#endif
+
             errors.error("", "Success").displayErrorMessageBox();
             return base::Error::success();
         }
 
     private:
-        int m_socket{-1};
+        void authenticate(const BLUETOOTH_DEVICE_INFO &deviceInfo) noexcept {
+            if (deviceInfo.fAuthenticated)
+                return;
+            HBLUETOOTH_AUTHENTICATION_REGISTRATION registration;
+            auto registrationError = BluetoothRegisterForAuthenticationEx(
+                &deviceInfo, &registration,
+                // typedef BOOL (CALLBACK *PFN_AUTHENTICATION_CALLBACK_EX)(_In_opt_ LPVOID pvParam, _In_
+                // PBLUETOOTH_AUTHENTICATION_CALLBACK_PARAMS pAuthCallbackParams);
+                [](LPVOID pvParam, PBLUETOOTH_AUTHENTICATION_CALLBACK_PARAMS pAuthCallbackParams) -> BOOL {
+                    auto *device = static_cast<Device *>(pvParam);
+                    static_cast<void>(device);
+                    std::cout << "Authetncatab!\n";
+
+                    BLUETOOTH_AUTHENTICATE_RESPONSE response{};
+                    response.bthAddressRemote = pAuthCallbackParams->deviceInfo.Address;
+                    response.authMethod = pAuthCallbackParams->authenticationMethod;
+                    for (std::size_t i = 0; i < 6; ++i)
+                        response.pinInfo.pin[i] = pAuthCallbackParams->deviceInfo.Address.rgBytes[5 - i];
+                    response.pinInfo.pinLength = 6;
+                    response.negativeResponse = FALSE;
+
+                    std::cout << "PIN: " << std::hex;
+                    for (std::size_t i = 0; i < 6; ++i)
+                        std::cout << static_cast<int>(response.pinInfo.pin[i]) << " ";
+                    std::cout << "\n" << std::dec;
+
+                    auto error = BluetoothSendAuthenticationResponseEx(nullptr, &response);
+                    std::cout << "Sending response: ";
+                    printResult(error);
+                    return true;
+                },
+                this);
+
+            std::cout << "Registration went: ";
+            printResult(registrationError);
+
+            auto info = deviceInfo;
+            auto error = BluetoothAuthenticateDeviceEx(nullptr, nullptr, &info, nullptr, MITMProtectionNotRequired);
+            std::cout << "Authenticate: ";
+            printResult(error);
+        }
+
+        SOCKET m_socket{INVALID_SOCKET};
     };
 
     void
@@ -158,12 +161,15 @@ namespace input::bluetooth {
     Win32BluetoothManager::initialize() noexcept {
         base::FunctionErrorGenerator generator{"InputLibrary", "Win32BluetoothManager"};
 
+        // TODO: WSAStartup should not be called from this class
+        // This is because the Bluetooth APIs aren't the only ones using WSA/sockets.
         WSADATA wsaData{};
         auto wsaVersionRequest = MAKEWORD(2, 2);
         if (auto err = WSAStartup(wsaVersionRequest, &wsaData); err != 0) {
             return generator.fromWinError("Initialize WSA", err);
         }
 
+        /*
         std::thread thread([&]() {
             win32::BluetoothDeviceIteration iteration{};
             iteration.run([&](HBLUETOOTH_DEVICE_FIND, const BLUETOOTH_DEVICE_INFO &deviceInfo) {
@@ -177,8 +183,8 @@ namespace input::bluetooth {
                     std::cout << "Device mismatch!\n";
             });
         });
-        thread.detach();
-
+        thread.detach();*/
+        
         //return generator.fromWinError("do stuff");
         return base::Error::success();
     }

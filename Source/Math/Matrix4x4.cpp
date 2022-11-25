@@ -9,12 +9,12 @@
 #include <cmath>
 
 math::Matrix4x4<float>
-math::createCameraViewMatrix(math::Vector3f inForward, math::Vector3f inUp) noexcept {
+math::createCameraViewMatrix(Vector3f inForward, Vector3f inUp) noexcept {
     const auto forward = inForward.normalize();
     const auto right = inUp.normalize().cross(forward);
     const auto up = forward.cross(right);
 
-    math::Matrix4x4<float> matrix{};
+    Matrix4x4<float> matrix{};
 
     matrix[0][0] = right.x();
     matrix[0][1] = right.y();
@@ -35,11 +35,11 @@ math::createCameraViewMatrix(math::Vector3f inForward, math::Vector3f inUp) noex
 
 math::Matrix4x4<float>
 math::createPerspectiveProjectionMatrix(float fov, float width, float height, float zNear, float zFar) noexcept {
-    const auto tanHalfFOV = std::tan(math::toRadians(fov / 2));
+    const auto tanHalfFOV = std::tan(toRadians(fov / 2));
     const auto aspectRatio = width / height;
     const auto zRange = zNear - zFar;
 
-    math::Matrix4x4<float> matrix{};
+    Matrix4x4<float> matrix{};
 
     matrix[0][0] = 1 / (tanHalfFOV * aspectRatio);
     matrix[1][1] = 1 / tanHalfFOV;

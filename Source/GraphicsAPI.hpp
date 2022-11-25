@@ -17,18 +17,19 @@
 #include <cstdint>
 
 #include "Source/Base/Debug.hpp"
-#include "Source/Base/Library.hpp"
+#include "Source/Base/ErrorOr.hpp"
 #include "Source/ECS/Forward.hpp"
+#include "Source/Event/EventHandler.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Input/Forward.hpp"
 #include "Source/Input/KeyboardUpdate.hpp"
 #include "Source/Interface/Forward.hpp"
 #include "Source/Resources/ModelDescriptor.hpp"
 #include "Source/Resources/ModelGeometry.hpp"
+#include "Source/Resources/ResourceLocateEvent.hpp"
+#include "Source/Resources/SkyboxDescriptor.hpp"
 #include "Source/Resources/TextureDescriptor.hpp"
 #include "Source/Resources/TextureInput.hpp"
-
-#include <string_view>
 
 class WindowAPI;
 
@@ -53,6 +54,12 @@ public:
         VULKAN,
     };
 
+    event::EventHandler<resources::ResourceLocateEvent> onLocateResource{};
+
+#ifdef LAVENDER_BUILD_DEBUG
+    event::EventHandler<const std::string> onGraphicsModeChange{};
+#endif // LAVENDER_BUILD_DEBUG
+
     [[nodiscard]] inline const interface::Camera *
     camera() const noexcept {
         return m_camera;
@@ -63,10 +70,16 @@ public:
         return m_controller;
     }
 
-    [[nodiscard]] virtual resources::ModelGeometryDescriptor *
+    [[nodiscard]] virtual base::ErrorOr<resources::ModelGeometryDescriptor *>
     createModelGeometry(const resources::ModelGeometry &geometry) noexcept = 0;
 
-    [[nodiscard]] virtual resources::TextureDescriptor *
+    [[nodiscard]] virtual base::ErrorOr<resources::SkyboxDescriptor *>
+    createSkyBox(const resources::TextureInput &textureInput) noexcept = 0;
+
+    [[nodiscard]] virtual base::ErrorOr<resources::ModelGeometryDescriptor *>
+    createSphere(std::size_t stackCount, std::size_t sectorCount, float radius) noexcept;
+
+    [[nodiscard]] virtual base::ErrorOr<resources::TextureDescriptor *>
     createTexture(const resources::TextureInput &textureInput) noexcept = 0;
 
     [[nodiscard]] inline constexpr const ecs::Scene *
@@ -74,10 +87,10 @@ public:
         return m_scene;
     }
 
-    [[nodiscard]] virtual bool
+    [[nodiscard]] virtual base::Error
     initialize(WindowAPI *) = 0;
 
-    [[nodiscard]] virtual std::unique_ptr<ecs::Scene>
+    [[nodiscard]] virtual base::ErrorOr<std::unique_ptr<ecs::Scene>>
     loadGLTFScene(std::string_view fileName) noexcept;
 
 #ifdef LAVENDER_BUILD_DEBUG
@@ -102,7 +115,7 @@ public:
      * uploadModelDescriptor, there should be another subroutine in GraphicsAPI
      * to do so.
      */
-    [[nodiscard]] virtual const resources::ModelDescriptor *
+    [[nodiscard]] virtual base::ErrorOr<const resources::ModelDescriptor *>
     uploadModelDescriptor(resources::ModelDescriptor &&modelDescriptor) noexcept = 0;
 
     virtual ~GraphicsAPI() noexcept = default;

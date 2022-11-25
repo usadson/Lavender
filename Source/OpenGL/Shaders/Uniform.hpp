@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <array>
+
+#include <GL/glew.h>
+
 #include "Source/Math/Matrix4x4.hpp"
 #include "Source/Math/Vector.hpp"
 
@@ -45,5 +49,28 @@ namespace gle {
     GLE_UNIFORM_DEF(Vector2, math::Vector<float, 2>)
     GLE_UNIFORM_DEF(Vector3, math::Vector<float, 3>)
     GLE_UNIFORM_DEF(Vector4, math::Vector<float, 4>)
+
+    template<std::uint8_t Count>
+    class UniformMatrix4fArray {
+    public:
+        using LocationType = int;
+
+        [[nodiscard]] inline constexpr explicit
+        UniformMatrix4fArray(LocationType location) noexcept
+            : m_location(location) { }
+
+        [[nodiscard]] inline constexpr LocationType
+        location() const noexcept {
+            return m_location;
+        }
+
+        void
+        store(const std::array<math::Vector<float, 4>, Count> &array) noexcept {
+            glUniformMatrix4fv(location(), Count, GL_TRUE, array.data());
+        }
+
+    private:
+        LocationType m_location;
+    };
 
 } // namespace gle

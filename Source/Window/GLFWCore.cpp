@@ -12,7 +12,6 @@
 #include "GLFWCore.hpp"
 
 #include <cassert>
-#include <cstdio>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -358,6 +357,21 @@ namespace window {
         } else {
             glfwSwapInterval(0);
         }
+    }
+
+    base::Error
+    GLFWCore::setTitle(std::string &&title) noexcept {
+        base::FunctionErrorGenerator errors{"WindowAPI", "GLFWCore"};
+        if (!m_window)
+            return errors.error("Set window title", "Not initialized.");
+
+        glfwSetWindowTitle(m_window, title.c_str());
+
+        const char *description;
+        if (glfwGetError(&description) != GLFW_NO_ERROR)
+            return errors.error("Set window title", description);
+
+        return base::Error::success();
     }
 
     bool

@@ -13,12 +13,15 @@ add_library(OpenGLAPIEngine OBJECT
         GLTFLoader.cpp
         OpenGLHelpers.cpp
         Renderer/DeferredRenderer.cpp
+        Renderer/SkyBoxRenderer.cpp
         Resources/GBuffer.cpp
         Resources/RenderQuad.cpp
+        Shaders/AnimatedGBufferShader.cpp
         Shaders/GBufferShader.cpp
         Shaders/LightingPassShader.cpp
         Shaders/Shader.cpp
         Shaders/ShaderProgram.cpp
+        Shaders/SkyBoxShader.cpp
         Shaders/Uniform.cpp
         TextureLoader.cpp
         Utils.cpp

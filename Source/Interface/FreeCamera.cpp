@@ -39,10 +39,14 @@ namespace interface {
         m_up = m_forward.cross(hAxis).normalize();
     }
 
-    void
+    ecs::DidUpdate
     FreeCamera::onUpdate(float deltaTime) noexcept {
         if (!m_controller)
-            return;
+            return ecs::DidUpdate::NO;
+
+        //deltaTime *= 20;
+
+        bool updated{false};
 
         const float moveHorizontal = resolveDirection(m_controller->moveRight, m_controller->moveLeft) * deltaTime;
         transformation().translation.y() += resolveDirection(m_controller->moveUp, m_controller->moveDown) * deltaTime;
@@ -50,23 +54,29 @@ namespace interface {
 
         if (moveHorizontal != 0) {
             transformation().translation = transformation().translation.add(left().mul(moveHorizontal));
+            updated = true;
         }
 
         if (moveDepth != 0) {
             transformation().translation = transformation().translation.add(forward().mul(moveDepth));
+            updated = true;
         }
 
         rotatePitch(m_controller->rotatePitch * m_controller->mouseSensitivity);
         rotateYaw(m_controller->rotateYaw * m_controller->mouseSensitivity);
 
+        if (m_controller->rotatePitch != 0 || m_controller->rotateYaw != 0)
+            updated = true;
+
         const_cast<input::Controller *>(m_controller)->rotateYaw = 0;
         const_cast<input::Controller *>(m_controller)->rotatePitch = 0;
+
+        return updated ? ecs::DidUpdate::YES : ecs::DidUpdate::NO;
     }
 
     math::Matrix4x4<float>
     FreeCamera::viewMatrix() const noexcept {
-
-        return math::createCameraViewMatrix(m_forward, m_up)
+        return createCameraViewMatrix(m_forward, m_up)
                 .mul(math::Matrix4x4<float>{}.translate({-position().x(), -position().y(), -position().z()}));
     }
 

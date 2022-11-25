@@ -44,9 +44,19 @@ namespace ecs {
             return m_entities.back().get();
         }
 
+        [[nodiscard]] inline std::vector<std::unique_ptr<Entity>> &
+        data() noexcept {
+            return m_entities;
+        }
+
         [[nodiscard]] inline const std::vector<std::unique_ptr<Entity>> &
         data() const noexcept {
             return m_entities;
+        }
+
+        inline constexpr void
+        forceUpdateIncrement() noexcept {
+            ++m_updateCount;
         }
 
         inline void

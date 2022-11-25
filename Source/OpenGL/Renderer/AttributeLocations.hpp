@@ -17,6 +17,10 @@ namespace gle {
         GL::UnsignedIntType normal{};
         GL::UnsignedIntType position{};
         GL::UnsignedIntType textureCoordinates{};
+        GL::UnsignedIntType tangent{};
+        GL::UnsignedIntType bitangent{};
+        GL::UnsignedIntType joint{};
+        GL::UnsignedIntType weight{};
     };
 
 } // namespace gle

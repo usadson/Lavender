@@ -43,7 +43,7 @@ namespace io {
          * Note: this function assumes the std::string_view's end is a NUL
          *       byte.
          */
-        [[nodiscard]] FileInput(const std::string_view) noexcept;
+        [[nodiscard]] FileInput(std::string_view fileName) noexcept;
 
         ~FileInput() noexcept;
 

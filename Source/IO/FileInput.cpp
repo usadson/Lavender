@@ -34,7 +34,7 @@ namespace io {
     }
 
     [[nodiscard]] inline constexpr Error
-    associateReadErrnoWithIOError(int error) noexcept {
+    associateReadErrnoWithIOError([[maybe_unused]] int error) noexcept {
         return Error::UNKNOWN_READ_ERROR;
     }
 

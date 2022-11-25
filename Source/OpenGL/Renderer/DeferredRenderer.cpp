@@ -24,15 +24,40 @@
 
 namespace gle {
 
+    constexpr base::FunctionErrorGenerator errors{"OpenGLCore", "DeferredRenderer"};
+
     AttributeLocations
-    DeferredRenderer::attributeLocations() noexcept {
+    DeferredRenderer::attributeLocations(CapabilitiesRequired capabilitiesRequired) noexcept {
         AttributeLocations locations{};
 
-        locations.position = m_gBufferShader.attributeLocationPosition();
-        locations.textureCoordinates = m_gBufferShader.attributeLocationTextureCoordinates();
-        locations.normal = m_gBufferShader.attributeLocationNormal();
+        if (capabilitiesRequired.hasSkin) {
+            locations.position = m_animatedGBufferShader.attributeLocationPosition();
+            locations.textureCoordinates = m_animatedGBufferShader.attributeLocationTextureCoordinates();
+            locations.normal = m_animatedGBufferShader.attributeLocationNormal();
+            locations.tangent = m_animatedGBufferShader.attributeLocationTangent();
+            locations.bitangent = m_animatedGBufferShader.attributeLocationBitangent();
+            locations.joint = m_animatedGBufferShader.attributeLocationJoint();
+            locations.weight = m_animatedGBufferShader.attributeLocationWeight();
+        } else {
+            locations.position = m_gBufferShader.attributeLocationPosition();
+            locations.textureCoordinates = m_gBufferShader.attributeLocationTextureCoordinates();
+            locations.normal = m_gBufferShader.attributeLocationNormal();
+            locations.tangent = m_gBufferShader.attributeLocationTangent();
+            locations.bitangent = m_gBufferShader.attributeLocationBitangent();
+        }
 
         return locations;
+    }
+
+    template<GLint TextureBank>
+    static void
+    setTexture(GLuint textureID) {
+        static GLuint oldValue = 0;
+        if (textureID == oldValue)
+            return;
+
+        glActiveTexture(TextureBank);
+        glBindTexture(GL_TEXTURE_2D, textureID);
     }
 
     void
@@ -53,20 +78,34 @@ namespace gle {
 
             if (entity->modelDescriptor()->albedoTextureDescriptor() != nullptr) {
                 auto *albedoTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->albedoTextureDescriptor());
+                setTexture<GL_TEXTURE0>(albedoTexture->textureID());
+            } else
+                setTexture<GL_TEXTURE0>(0);
 
-                if (albedoTexture->textureID() != 0) {
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, albedoTexture->textureID());
-                }
-            }
+            if (entity->modelDescriptor()->normalMapTextureDescriptor() != nullptr) {
+                auto *normalMapTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->normalMapTextureDescriptor());
+                setTexture<GL_TEXTURE1>(normalMapTexture->textureID());
+            } else
+                setTexture<GL_TEXTURE1>(0);
 
             m_gBufferShader.uploadTransformationMatrix(entity->transformation().toMatrix());
 
             const auto *geometry = static_cast<const ModelGeometryDescriptor *>(entity->modelDescriptor()->geometryDescriptor());
             assert(geometry != nullptr);
+
+            assert(glIsVertexArray(geometry->vao()));
+
             glBindVertexArray(geometry->vao());
+            assert(glGetError() == GL_NO_ERROR);
+
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->ebo());
-            glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);
+            
+
+            if (geometry->indexCount() == 0) {
+                glDrawArrays(GL_TRIANGLES, 0, geometry->vertexCount());
+            } else {
+                glDrawElements(GL_TRIANGLES, geometry->indexCount(), geometry->indexType(), nullptr);
+            }
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -78,6 +117,9 @@ namespace gle {
 
     void
     DeferredRenderer::drawLighting() noexcept {
+        // I believe glClear isn't necessary, since the GBuffer is filled with colour entirely.
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_gBuffer.texturePosition());
         glActiveTexture(GL_TEXTURE1);
@@ -134,29 +176,27 @@ namespace gle {
         return m_lightingPassShader.setPointLight(index, pointLight);
     }
 
-    bool
+    base::Error
     DeferredRenderer::setup() noexcept {
-        if (!m_gBufferShader.setup()) {
-            std::puts("[GL] DeferredRenderer: failed to setup GBuffer shader");
-            return false;
-        }
+        if (!m_animatedGBufferShader.setup())
+            return errors.error("Setup AnimatedGBuffer shader", "Failed (TODO)");
 
-        if (!m_lightingPassShader.setup()) {
-            std::puts("[GL] DeferredRenderer: failed to setup lighting pass shader");
-            return false;
-        }
+        if (!m_gBufferShader.setup())
+            return errors.error("Setup GBuffer shader", "Failed (TODO)");
 
-        if (!m_renderQuad.generate()) {
-            std::puts("[GL] DeferredRenderer: failed to generate the render quad");
-            return false;
-        }
+        if (!m_lightingPassShader.setup())
+            return errors.error("Setup lighting pass shader", "Failed (TODO)");
 
-        if (!setupDebugEnvironment()) {
-            std::puts("[GL] DeferredRenderer: failed to setup debug environment");
-            return false;
-        }
+        if (!m_renderQuad.generate())
+            return errors.error("Generate render quad", "Failed (TODO)");
 
-        return true;
+#ifdef LAVENDER_BUILD_DEBUG
+        if (!setupDebugEnvironment())
+            return errors.error("Setup debug environment", "Failed (TODO)");
+        
+#endif // LAVENDER_BUILD_DEBUG
+
+        return base::Error::success();
     }
 
 #ifdef LAVENDER_BUILD_DEBUG
@@ -164,7 +204,7 @@ namespace gle {
     DeferredRenderer::setupDebugEnvironment() noexcept {
         return m_lightingPassDebugShader.setup();
     }
-#endif
+#endif // LAVENDER_BUILD_DEBUG
 
     void
     DeferredRenderer::syncECS() noexcept {
@@ -175,13 +215,13 @@ namespace gle {
         // TODO this should be optimized in so many ways
         std::size_t pointLightIndex{0};
         for (const auto &entity : std::data(core()->scene()->entityList())) {
-            std::printf("EntityName: \"%s\"\n", entity->name().c_str());
-            if (entity->name() != "PointLight")
+            if (!entity->isLight())
                 continue;
 
             const auto *pointLight = static_cast<const ecs::PointLight *>(entity.get());
             const auto result = m_lightingPassShader.setPointLight(pointLightIndex++, *pointLight);
             assert(result);
+            static_cast<void>(result);
         }
 
         // TODO in the future, when we have less lights than the light limit,

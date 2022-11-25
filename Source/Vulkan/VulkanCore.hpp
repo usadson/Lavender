@@ -25,7 +25,7 @@
 
 namespace vke {
 
-    class Core
+    class Core final
             : public GraphicsAPI {
         WindowAPI *m_windowAPI{nullptr};
 
@@ -157,17 +157,22 @@ namespace vke {
                 : GraphicsAPI(scene, controller, camera) {
         }
 
-        [[nodiscard]] bool
+        [[nodiscard]] base::Error
         initialize(WindowAPI *) override;
 
-        [[nodiscard]] inline resources::ModelGeometryDescriptor *
+        [[nodiscard]] inline base::ErrorOr<resources::ModelGeometryDescriptor *>
         createModelGeometry(const resources::ModelGeometry &) noexcept override {
-            return {};
+            return { nullptr};
         }
 
-        [[nodiscard]] inline resources::TextureDescriptor *
+        [[nodiscard]] inline base::ErrorOr<resources::SkyboxDescriptor *>
+        createSkyBox(const resources::TextureInput &) noexcept override {
+            return {nullptr};
+        }
+
+        [[nodiscard]] inline base::ErrorOr<resources::TextureDescriptor *>
         createTexture(const resources::TextureInput &) noexcept override {
-            return {};
+            return {nullptr};
         }
 
         inline void
@@ -209,9 +214,9 @@ namespace vke {
             return m_swapChain;
         }
 
-        [[nodiscard]] inline const resources::ModelDescriptor *
+        [[nodiscard]] inline base::ErrorOr<const resources::ModelDescriptor *>
         uploadModelDescriptor(resources::ModelDescriptor &&) noexcept override {
-            return {};
+            return {nullptr};
         }
 
         [[nodiscard]] inline constexpr WindowAPI *

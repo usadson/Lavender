@@ -8,10 +8,9 @@
 
 #include "Source/ECS/Scene.hpp"
 
-std::unique_ptr<ecs::Scene>
-GraphicsAPI::loadGLTFScene(std::string_view fileName) noexcept  {
-    static_cast<void>(fileName);
-    return nullptr;
+base::ErrorOr<std::unique_ptr<ecs::Scene>>
+GraphicsAPI::loadGLTFScene([[maybe_unused]] std::string_view fileName) noexcept  {
+    return {nullptr};
 }
 
 #ifdef LAVENDER_BUILD_DEBUG
@@ -19,4 +18,11 @@ void
 GraphicsAPI::onDebugKey(input::KeyboardUpdate) noexcept {
     // To be overridden
 }
+
 #endif
+
+base::ErrorOr<resources::ModelGeometryDescriptor*>
+GraphicsAPI::createSphere([[maybe_unused]] std::size_t stacks, [[maybe_unused]] std::size_t sectors,
+    [[maybe_unused]] float size) noexcept {
+    return { nullptr };
+}

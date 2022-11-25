@@ -12,7 +12,7 @@
 
 namespace gle {
 
-    class TextureDescriptor
+    class TextureDescriptor final
             : public resources::TextureDescriptor {
         GLuint m_textureID;
 

@@ -18,9 +18,12 @@
 #include "Source/Base/Library.hpp"
 #include "Source/Event/EventHandler.hpp"
 #include "Source/GraphicsAPI.hpp"
+#include "Source/Input/DragAndDropEvents.hpp"
+#include "Source/Input/Forward.hpp"
 #include "Source/Input/KeyboardUpdate.hpp"
 #include "Source/Input/MouseGrabbed.hpp"
 #include "Source/Input/MouseUpdate.hpp"
+#include "Source/Input/ScrollEvent.hpp"
 #include "Source/Math/Size2D.hpp"
 #include "Source/Math/Vector.hpp"
 #include "Source/Utils/Version.hpp"
@@ -45,6 +48,7 @@ private:
 
 protected:
     input::MouseGrabbed m_mouseGrabbed{input::MouseGrabbed::NO};
+    WindowDragAndDropOption m_dragAndDropOption{WindowDragAndDropOption::DISABLED};
 
     virtual void 
     onVisibilityOptionUpdated() noexcept = 0;
@@ -65,6 +69,12 @@ public:
 
     event::EventHandler<input::KeyPressedEvent> onKeyPressed{};
     event::EventHandler<input::KeyReleasedEvent> onKeyReleased{};
+
+    event::EventHandler<input::DragEnterEvent> onDragEnter{};
+    event::EventHandler<input::DragOverEvent> onDragOver{};
+    event::EventHandler<input::DropEvent> onDrop{};
+    event::EventHandler<input::DragLeaveEvent> onDragLeave{};
+    event::EventHandler<input::ScrollEvent> onHorizontalScroll{};
 
     //
     // Functions
@@ -93,6 +103,9 @@ public:
 
     [[nodiscard]] virtual bool 
     doesWindowSupportDarkMode() const noexcept = 0;
+
+    [[nodiscard]] virtual base::Error
+    enableDragAndDrop(WindowDragAndDropOption) noexcept;
 
     [[nodiscard]] inline constexpr GraphicsAPI *
     graphicsAPI() noexcept {
@@ -142,17 +155,25 @@ public:
     requestVSyncMode(bool enabled) noexcept = 0;
 
     [[nodiscard]] virtual base::Error 
-    setIcon(std::string_view fileName) noexcept = 0;
+    setCursor([[maybe_unused]] input::StandardCursor) noexcept {
+        return base::Error("WindowAPI", "WindowAPI", "Set Cursor", "Operation Not Supported");
+    }
 
     virtual inline void 
     setDarkMode(DarkModeOption option) noexcept {
         m_darkModeOption = option;
     }
 
+    [[nodiscard]] virtual base::Error 
+    setIcon(std::string_view fileName) noexcept = 0;
+
     virtual inline void
     setMouseGrabbed(input::MouseGrabbed mouseGrabbed) noexcept {
         m_mouseGrabbed = mouseGrabbed;
     }
+
+    [[nodiscard]] virtual base::Error
+    setTitle(std::string &&) noexcept = 0;
 
     inline void 
     setVisibility(WindowVisibilityOption visibilityOption) noexcept {
@@ -168,6 +189,11 @@ public:
 
     [[nodiscard]] virtual bool
     shouldClose() = 0;
+
+    virtual void
+    showMessageBox([[maybe_unused]] std::string_view title, 
+                   [[maybe_unused]] std::string_view message) noexcept {
+    }
 
     /**
      * This function is called at the beginning of each game loop cycle. This

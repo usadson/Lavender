@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <set>
@@ -33,6 +32,8 @@ namespace vke {
 #endif
     };
 
+    constexpr base::FunctionErrorGenerator errors{"VulkanCore", "Core"};
+
     const std::array g_validationLayers{"VK_LAYER_KHRONOS_validation"};
     const std::array g_deviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -42,7 +43,7 @@ namespace vke {
                   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
                   void *pUserData) {
             std::printf("vke: validation layer: (%u %u)\"%s\"\n\n", static_cast<std::uint32_t>(messageSeverity),
-                static_cast<std::uint32_t>(messageType), pCallbackData->pMessage);
+                messageType, pCallbackData->pMessage);
 
         static_cast<void>(messageSeverity);
         static_cast<void>(messageType);
@@ -51,16 +52,17 @@ namespace vke {
         return VK_FALSE;
     }
 
-    bool
+    base::Error
     Core::initialize(WindowAPI *window) {
         m_windowAPI = window;
 
 #define ADD_TASK(name, function) if (!function) {\
-            std::puts("vke::initialize-> " name " failed.\n"); \
-            return false; \
+            return errors.error("Invoke task " name, "Failed (TODO)"); \
         }
 
+#ifndef NDEBUG
         ADD_TASK("check-validation-layer-support", (!opt_enableValidationLayers || checkValidationLayerSupport()))
+#endif
         ADD_TASK("create-instance", createInstance(window))
         ADD_TASK("setup-debug-messenger", setupDebugMessenger())
         ADD_TASK("create-surface", createSurface(window))
@@ -71,7 +73,7 @@ namespace vke {
         ADD_TASK("create-frame-buffers", createFramebuffers())
         ADD_TASK("create-command-pool", createCommandPool())
 
-        return true;
+        return base::Error::success();
 #undef ADD_TASK
     }
 
