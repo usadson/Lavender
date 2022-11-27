@@ -9,6 +9,8 @@
 
 #include "Source/OpenGL/Renderer/DeferredRenderer.hpp"
 
+#include "Resources/MaterialDescriptor.hpp"
+
 #include <cassert>
 #include <cstdio>
 
@@ -61,6 +63,23 @@ namespace gle {
     }
 
     void
+    uploadMaterial(resources::MaterialDescriptor const *materialDescriptor) {
+        if (materialDescriptor && materialDescriptor->albedoTextureDescriptor() != nullptr) {
+            auto* albedoTexture = static_cast<const TextureDescriptor*>(materialDescriptor->albedoTextureDescriptor());
+            setTexture<GL_TEXTURE0>(albedoTexture->textureID());
+        }
+        else
+            setTexture<GL_TEXTURE0>(0);
+
+        if (materialDescriptor->normalMapTextureDescriptor() != nullptr) {
+            auto* normalMapTexture = static_cast<const TextureDescriptor*>(materialDescriptor->normalMapTextureDescriptor());
+            setTexture<GL_TEXTURE1>(normalMapTexture->textureID());
+        }
+        else
+            setTexture<GL_TEXTURE1>(0);
+    }
+
+    void
     DeferredRenderer::drawGBuffer() noexcept {
         glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.buffer());
 
@@ -76,17 +95,7 @@ namespace gle {
             if (entity->modelDescriptor() == nullptr)
                 continue;
 
-            if (entity->modelDescriptor()->albedoTextureDescriptor() != nullptr) {
-                auto *albedoTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->albedoTextureDescriptor());
-                setTexture<GL_TEXTURE0>(albedoTexture->textureID());
-            } else
-                setTexture<GL_TEXTURE0>(0);
-
-            if (entity->modelDescriptor()->normalMapTextureDescriptor() != nullptr) {
-                auto *normalMapTexture = static_cast<const TextureDescriptor *>(entity->modelDescriptor()->normalMapTextureDescriptor());
-                setTexture<GL_TEXTURE1>(normalMapTexture->textureID());
-            } else
-                setTexture<GL_TEXTURE1>(0);
+            uploadMaterial(entity->modelDescriptor()->materialDescriptor());
 
             m_gBufferShader.uploadTransformationMatrix(entity->transformation().toMatrix());
 

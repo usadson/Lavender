@@ -712,7 +712,7 @@ namespace gle {
 
     // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#reference-sampler
     [[nodiscard]] static base::ErrorOr<resources::TextureSampler>
-    gltfLoadTextureSampler(const GLTFTextureLoadInfo& texLoadInfo, const nlohmann::json& textureJson) noexcept {
+    gltfLoadTextureSampler(const Context &context, const nlohmann::json& textureJson) noexcept {
         base::FunctionErrorGenerator errors{ "OpenGLCore", "GLTFLoader" };
         resources::TextureSampler sampler{};
 
@@ -727,7 +727,7 @@ namespace gle {
             return errors.error("Verify texture sampler index", "Index is negative");
 
         const auto samplerIndex = samplerIndexIt->get<std::size_t>();
-        const auto& json = texLoadInfo.information.json;
+        const auto& json = context.json();
         const auto samplersIt = json.find("samplers");
         if (samplersIt == json.end())
             return errors.error("Find sampler", "<root>.samplers missing");
@@ -825,28 +825,28 @@ namespace gle {
     }       
 
     [[nodiscard]] base::Error
-    gltfLoadTexture(const GLTFTextureLoadInfo &texLoadInfo, std::size_t textureIndex, resources::ModelDescriptor &modelDescriptor, resources::TextureSlot textureSlot) noexcept {
-        auto &texture = texLoadInfo.jsonTextures->at(textureIndex);
+    gltfLoadTexture(const Context &context, ImageLoader &imageLoader, std::size_t textureIndex, resources::MaterialDescriptor &materialDescriptor, resources::TextureSlot textureSlot) noexcept {
+        auto &texture = context.json()["textures"].at(textureIndex);
 
-        TRY_GET_VARIABLE(sampler, gltfLoadTextureSampler(texLoadInfo, texture))
+        TRY_GET_VARIABLE(sampler, gltfLoadTextureSampler(context, texture))
 
         auto sourceIt = texture.find("source");
         if (sourceIt == texture.end())
             // "[no_texture_source]"
             return base::Error::success();
 
-        auto imagesIt = texLoadInfo.information.json.find("images");
-        if (imagesIt == texLoadInfo.information.json.end())
+        auto imagesIt = context.json().find("images");
+        if (imagesIt == context.json().end())
             // "[no_json_images]"
             return base::Error::success();
 
-        return texLoadInfo.information.imageLoader.subscribeImageLoad(sourceIt->get<std::size_t>(),
-            [textureSlot, glCore = &texLoadInfo.glCore, modelDescriptor = &modelDescriptor, sampler = std::move(sampler)]
+        return imageLoader.subscribeImageLoad(sourceIt->get<std::size_t>(),
+            [textureSlot, graphicsAPI = &context.graphicsAPI(), materialDescriptor = &materialDescriptor, sampler = std::move(sampler)]
                 (io::image::BulkImageLoader::ImageRequestTag, io::image::BulkImageLoader::Image& loadedImage) {
-                TRY_GET_VARIABLE(textureDescriptor, glCore->createTexture(resources::TextureInput{ loadedImage.view(), resources::TextureSampler(sampler) }))
+                TRY_GET_VARIABLE(textureDescriptor, graphicsAPI->createTexture(resources::TextureInput{ loadedImage.view(), resources::TextureSampler(sampler) }))
                 //fmt::print("Attaching texture {:p} to modelDescriptor {:p}\n", static_cast<const void *>(textureDescriptor), static_cast<const void*>(modelDescriptor));
-                assert(modelDescriptor->textureAttachment(textureSlot) == nullptr);
-                modelDescriptor->attachTexture(textureSlot, textureDescriptor);
+                assert(materialDescriptor->textureAttachment(textureSlot) == nullptr);
+                materialDescriptor->attachTexture(textureSlot, textureDescriptor);
                 return base::Error::success();
             }
         );
@@ -901,38 +901,17 @@ namespace gle {
     }
 
     [[nodiscard]] base::Error
-    gltfLoadTextures(GLTFTextureLoadInfo &texLoadInfo, resources::ModelDescriptor &modelDescriptor) noexcept {
-        auto materialIndexIt = texLoadInfo.primitive.find("material");
-        if (materialIndexIt == std::end(texLoadInfo.primitive))
-            // "[no_mesh_primitives_0_material]"
-            return base::Error::success();
-
-        assert(materialIndexIt->is_number());
-        auto materialIndex = materialIndexIt->get<unsigned int>();
-
-        auto materialsIt = texLoadInfo.information.json.find("materials");
-        if (materialsIt == std::end(texLoadInfo.information.json))
-            // "[no_json_materials]"
-            return base::Error::success();
-
-        auto texturesIt = texLoadInfo.information.json.find("textures");
-        if (texturesIt == texLoadInfo.information.json.end())
-            // "[no_json_textures]"
-            return base::Error::success();
-
-        texLoadInfo.jsonTextures = &*texturesIt;
-        texLoadInfo.material = &materialsIt->at(materialIndex);
-
+    gltfLoadTextures(Context &context, ImageLoader &imageLoader, nlohmann::json const& materialJson, resources::MaterialDescriptor &materialDescriptor) noexcept {
 #ifdef GLTF_NO_TEXTURES
         static_cast<void>(modelDescriptor);
 #else // GLTF_NO_TEXTURES
-        if (auto *indexIt = gltfResolveNormalMapTexture(*texLoadInfo.material)) {
-            TRY(gltfLoadTexture(texLoadInfo, indexIt->get<unsigned int>(), modelDescriptor, resources::TextureSlot::NORMAL_MAP))
+        if (auto *indexIt = gltfResolveNormalMapTexture(materialJson)) {
+            TRY(gltfLoadTexture(context, imageLoader, indexIt->get<unsigned int>(), materialDescriptor, resources::TextureSlot::NORMAL_MAP))
         }
 
-        TRY_GET_VARIABLE(albedoTextureIndex, gltfResolveAlbedoTexture(*texLoadInfo.material));
+        TRY_GET_VARIABLE(albedoTextureIndex, gltfResolveAlbedoTexture(materialJson))
         if (albedoTextureIndex.has_value()) {
-            TRY(gltfLoadTexture(texLoadInfo, albedoTextureIndex.value(), modelDescriptor, resources::TextureSlot::ALBEDO))
+            TRY(gltfLoadTexture(context, imageLoader, albedoTextureIndex.value(), materialDescriptor, resources::TextureSlot::ALBEDO))
         }
 #endif // GLTF_NO_TEXTURES
 
@@ -1111,6 +1090,23 @@ namespace gle {
         return base::Error::success();
     }
 
+    [[nodiscard]] base::Error
+    parseMaterials(Context &context, ImageLoader &imageLoader, const nlohmann::json &json) {
+        if (!json.contains("materials"))
+            return base::Error::success();
+
+        const auto parsingMaterialsBegin = std::chrono::high_resolution_clock::now();
+        auto const& materialsJson = json["materials"];
+        for (auto const &materialJson : materialsJson) {
+            TRY_GET_VARIABLE(materialDescriptor, context.createMaterialDescriptor())
+            TRY(gltfLoadTextures(context, imageLoader, materialJson, *materialDescriptor))
+        }
+
+        const auto parsingMaterialsEnd = std::chrono::high_resolution_clock::now();
+        fmt::print("[GLTF] Parsing materials took {} ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(parsingMaterialsEnd - parsingMaterialsBegin).count());
+        return base::Error::success();
+    }
+
     [[nodiscard]] base::ErrorOr<std::unique_ptr<ecs::Scene>>
     Core::loadGLTFScene(std::string_view fileName) noexcept {
         base::FunctionErrorGenerator errors{"OpenGLCore", "GLCore/GLTFLoader"};
@@ -1181,7 +1177,6 @@ namespace gle {
             const auto imagesPreLoadEnd = std::chrono::high_resolution_clock::now();
             fmt::print("[GLTF] Loaded preloaded images took {} ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(imagesPreLoadEnd - imagesPreLoadBegin).count());
 
-
             auto scene = std::make_unique<ecs::Scene>(ecs::EntityList{});
             const nlohmann::json *lightExtensionLights{};
 
@@ -1190,6 +1185,8 @@ namespace gle {
                     if (auto lightsIt = it->find("lights"); lightsIt != it->end())
                         lightExtensionLights = &lightsIt.value();
             }
+
+            TRY(parseMaterials(context, imageLoader, json));
 
             const auto parsingEntitiesBegin = std::chrono::high_resolution_clock::now();
 
@@ -1269,12 +1266,19 @@ namespace gle {
                             information.nbo, static_cast<GLsizei>(information.indexCount), information.eboType));
 
                     auto* geometryDescriptor = m_geometryDescriptors.back().get();
-                    resources::ModelDescriptor modelDescriptor{ geometryDescriptor };
+                    resources::MaterialDescriptor *materialDescriptor{};
 
-                    if (modelDescriptor.normalMapTextureDescriptor() != nullptr) {
+
+                    if (auto materialIt = primitive.find("material"); materialIt != primitive.end()) {
+                        materialDescriptor = context.material(materialIt->get<std::size_t>());
+                    }
+
+                    resources::ModelDescriptor modelDescriptor{ geometryDescriptor, materialDescriptor };
+
+                    if (modelDescriptor.materialDescriptor() != nullptr && modelDescriptor.materialDescriptor()->albedoTextureDescriptor() != nullptr) {
                         if (auto tangent = primitiveAttributes.find("TANGENT"); tangent != primitiveAttributes.end()) {
                             TRY(gltfLoadTangentBufferAndCalculateBitangents(*tangent, information, *geometryDescriptor, attributeLocations))
-                            assert(geometryDescriptor->tangentBufferObject() != 0);
+                                assert(geometryDescriptor->tangentBufferObject() != 0);
                             assert(geometryDescriptor->bitangentBufferObject() != 0);
                         }
 
@@ -1285,12 +1289,6 @@ namespace gle {
                     }
 
                     TRY_GET_VARIABLE(model, uploadModelDescriptor(std::forward<resources::ModelDescriptor>(modelDescriptor)))
-
-                    GLTFTextureLoadInfo textureLoadInfo {
-                        fileName, information, node, mesh, primitive, * this
-                    };
-                    if (auto error = gltfLoadTextures(textureLoadInfo, const_cast<resources::ModelDescriptor&>(*model)))
-                        return error;
 
                     auto* entity = scene->entityList().create(std::string(nodeName), std::move(model), gltfParseTransformation(node));
                     if (entity == nullptr)

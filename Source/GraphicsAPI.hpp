@@ -70,6 +70,9 @@ public:
         return m_controller;
     }
 
+    [[nodiscard]] virtual base::ErrorOr<resources::MaterialDescriptor *>
+    createMaterial() noexcept = 0;
+
     [[nodiscard]] virtual base::ErrorOr<resources::ModelGeometryDescriptor *>
     createModelGeometry(const resources::ModelGeometry &geometry) noexcept = 0;
 

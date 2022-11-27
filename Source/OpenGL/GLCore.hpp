@@ -35,6 +35,7 @@ namespace gle {
             : public GraphicsAPI {
         WindowAPI *m_windowAPI{nullptr};
 
+        std::vector<std::unique_ptr<resources::MaterialDescriptor>> m_materialDescriptors{};
         std::vector<std::unique_ptr<ModelGeometryDescriptor>> m_geometryDescriptors{};
         std::vector<std::unique_ptr<TextureDescriptor>> m_textureDescriptors{};
         std::vector<std::unique_ptr<resources::ModelDescriptor>> m_modelDescriptors{};
@@ -57,12 +58,15 @@ namespace gle {
         initializeGLEW() noexcept;
 
     public:
-        [[nodiscard]] inline explicit
+        [[nodiscard]] explicit
         Core(const ecs::Scene *scene,
              const input::Controller *controller,
-             const interface::Camera *camera) noexcept
-                : GraphicsAPI(scene, controller, camera) {
-        }
+             const interface::Camera *camera) noexcept;
+
+        ~Core() noexcept;
+
+        [[nodiscard]] base::ErrorOr<resources::MaterialDescriptor *>
+        createMaterial() noexcept override;
 
         [[nodiscard]] base::ErrorOr<resources::ModelGeometryDescriptor *>
         createModelGeometry(const resources::ModelGeometry &geometry) noexcept override;

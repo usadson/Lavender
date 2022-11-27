@@ -160,6 +160,11 @@ namespace vke {
         [[nodiscard]] base::Error
         initialize(WindowAPI *) override;
 
+        [[nodiscard]] base::ErrorOr<resources::MaterialDescriptor*>
+        createMaterial() noexcept override {
+            return {nullptr};
+        }
+
         [[nodiscard]] inline base::ErrorOr<resources::ModelGeometryDescriptor *>
         createModelGeometry(const resources::ModelGeometry &) noexcept override {
             return { nullptr};

@@ -26,6 +26,7 @@
 #endif
 
 #include "Source/Resources/FileResourceLocation.hpp"
+#include "Source/Resources/MaterialDescriptor.hpp"
 #include "Source/Resources/MemoryResourceLocation.hpp"
 #include "Source/Resources/TextureInput.hpp"
 

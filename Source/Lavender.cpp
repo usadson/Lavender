@@ -17,6 +17,7 @@
 #include "Source/Input/Bluetooth/Win32BluetoothManager.hpp"
 #include "Source/OpenGL/GLCore.hpp"
 #include "Source/Resources/FileResourceLocation.hpp"
+#include "Source/Resources/MaterialDescriptor.hpp"
 #include "Source/Vulkan/VulkanCore.hpp"
 #include "Source/Window/GLFWCore.hpp"
 

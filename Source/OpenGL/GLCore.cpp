@@ -21,12 +21,26 @@
 #include "Source/Interface/Camera.hpp"
 #include "Source/OpenGL/DebugMessenger.hpp"
 #include "Source/OpenGL/Renderer/DeferredRenderer.hpp"
+#include "Source/Resources/MaterialDescriptor.hpp"
 #include "Source/Window/WindowAPI.hpp"
 
 namespace gle {
 
     static_assert(std::is_same_v<GLfloat, float>);
     constexpr base::FunctionErrorGenerator errors{ "OpenGLCore", "Core" };
+
+    Core::Core(ecs::Scene const *scene,
+               input::Controller const *controller,
+               interface::Camera const *camera) noexcept
+        : GraphicsAPI(scene, controller, camera) {
+    }
+    
+    Core::~Core() noexcept = default;
+
+    base::ErrorOr<resources::MaterialDescriptor *>
+    Core::createMaterial() noexcept {
+        return m_materialDescriptors.emplace_back(std::make_unique<resources::MaterialDescriptor>()).get();
+    }
 
     base::ErrorOr<resources::ModelGeometryDescriptor *>
     Core::createModelGeometry(const resources::ModelGeometry &geometry) noexcept {

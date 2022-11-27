@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Source/Base/ErrorOr.hpp"
+#include "Source/Resources/MaterialDescriptor.hpp"
 #include "Source/Resources/ResourceLocation.hpp"
 
 class GraphicsAPI;
@@ -36,6 +37,9 @@ namespace io::format::gltf {
             return m_buffers;
         }
 
+        [[nodiscard]] base::ErrorOr<resources::MaterialDescriptor *>
+        createMaterialDescriptor() noexcept;
+
         [[nodiscard]] constexpr std::string_view
         fileName() const noexcept {
             return m_fileName;
@@ -54,6 +58,11 @@ namespace io::format::gltf {
         [[nodiscard]] base::ErrorOr<std::unique_ptr<resources::ResourceLocation>>
         loadURI(std::string_view) noexcept;
 
+        [[nodiscard]] constexpr resources::MaterialDescriptor *
+        material(std::size_t index) const noexcept {
+            return m_materials.at(index);
+        }
+
         [[nodiscard]] base::ErrorOr<ResourceInfo>
         resolveResourceInfo(std::size_t bufferViewIndex, const nlohmann::json& accessor) noexcept;
 
@@ -63,6 +72,7 @@ namespace io::format::gltf {
         std::string_view m_fileName{};
         nlohmann::json m_json;
         std::vector<std::string> m_buffers{};
+        std::vector<resources::MaterialDescriptor *> m_materials{};
     };
     
 } // namespace io::format::gltf

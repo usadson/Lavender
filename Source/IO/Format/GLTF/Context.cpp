@@ -30,6 +30,13 @@ namespace io::format::gltf {
 
     Context::~Context() noexcept = default;
 
+    base::ErrorOr<resources::MaterialDescriptor *>
+    Context::createMaterialDescriptor() noexcept {
+        TRY_GET_VARIABLE(descriptor, m_graphicsAPI.createMaterial());
+        m_materials.push_back(descriptor);
+        return descriptor;
+    }
+
     base::ErrorOr<std::unique_ptr<resources::ResourceLocation>>
     Context::loadURI(std::string_view uriData) noexcept {
         base::FunctionErrorGenerator errors{"IOGLTFLibrary", "Context"};
